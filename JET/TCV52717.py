@@ -22,7 +22,7 @@ import h5py
 #R0            = 2.96
 #B0            = 3.45
 plasma_volume = 100 # m3
-Ti            = 300 #  assumption for impurities
+Ti            = 300 #  assumption for impurities, K
 kb            = kb # Boltzmann constant
 
 # Pick one
@@ -76,8 +76,8 @@ def get_settings(argv):
         'impurities': [
             #{'name': 'Ne', 'Z': 10, 'n': bar(6.2)}
             #{'name': 'Ne', 'Z': 10, 'n': 1e19},
-            {'name': 'Ar', 'Z': 18, 'n': 1e20},
-            {'name': 'D2', 'Z': 1, 'n': 1e20}
+            {'name': 'Ar', 'Z': 18, 'n': n_Ar},
+            {'name': 'D2', 'Z': 1, 'n': n_D2}
         ], # Impurities
         'Ip0' : Ip0,
         #'nre0': 0,
