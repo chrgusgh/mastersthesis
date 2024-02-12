@@ -1,3 +1,7 @@
 data/
 JETdata/
-
+JETresults/
+JET/output/
+JET/output.h5
+JET/__pycache__
+JET/.driver.py.swp

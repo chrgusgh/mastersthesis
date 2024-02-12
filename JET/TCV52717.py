@@ -28,11 +28,11 @@ kb            = kb # Boltzmann constant
 # Pick one
 SHOT = 1
 
-fp      = 'JETdata/DDB_Runaways_ArBt_scan.h5'
+fp      = '../JETdata/DDB_Runaways_ArBt_scan.h5'
 pulses  = ['85021', '85445', '85450', '85451', '85453', '85943']
 f       = h5py.File(fp, 'r')
 p0      = f[pulses[SHOT]]
-eq      = EQDSK(f'JETdata/g_JET_ehtr_{pulses[SHOT]}_t62.3990_62.4010', override_psilim=2e-3)
+eq      = EQDSK(f'../JETdata/g_JET_ehtr_{pulses[SHOT]}_t62.3990_62.4010', override_psilim=2e-3)
 
 n0r     = p0['R_Ne_profile_LIDAR_m'][:] - eq.R0
 n0r_pos = np.where(n0r >= 0)
@@ -51,7 +51,7 @@ Ar      = p0['Ar_Pam3'][:]
 # Convert mag equlib data to h5
 mag_eq_fn = f'mag_eq_{pulses[SHOT]}_data.h5'
 #eq.save_LUKE(mag_eq_fn)
-# change
+
 def impurity_density(impurity):
     N = impurity / (kb * Ti)
     n_i = N / plasma_volume
@@ -76,8 +76,8 @@ def get_settings(argv):
         'impurities': [
             #{'name': 'Ne', 'Z': 10, 'n': bar(6.2)}
             #{'name': 'Ne', 'Z': 10, 'n': 1e19},
-            {'name': 'Ar', 'Z': 18, 'n': n_Ar},
-            {'name': 'D2', 'Z': 1, 'n': n_D2}
+            {'name': 'Ar', 'Z': 18, 'n': 1e20},
+            {'name': 'D2', 'Z': 1, 'n': 1e20}
         ], # Impurities
         'Ip0' : Ip0,
         #'nre0': 0,
@@ -115,7 +115,7 @@ def get_settings(argv):
 
 
 def run_disruption_simulation(args, settings):
-    ds = generate_baseline(equilibrium=None if args.cylindrical else mag_eq_fn,
+    ds = generate_baseline(equilibrium=None if args.cylindrical else f'../JETdata/{mag_eq_fn}',
         runInit=(args.runfrom <= 0), verboseInit=(0 in args.verbose), **settings)
 
     doMain, _ = simulate(ds, **settings)

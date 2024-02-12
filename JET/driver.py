@@ -163,7 +163,7 @@ def setup_runawaygrid(ds, equilibrium):
         ds.runawaygrid.setBiuniformGrid(thetasep=np.pi-0.6, nthetasep_frac=0.5)
 
 
-def generate_baseline(mode=MODE_FLUID, equilibrium=None, nr=10, reltol=1e-6,
+def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, nr=10, reltol=1e-6,
         nre0=None, nre0_r=0, j0=None, j0r=None, T0=1e3, T0r=None, tauwall=None,
         Vloop=None, withfre=False, E0=None, E0r=None, Ip0=200e3, n0=1e19, n0r=None,
         nxi_hot=15, np1_hot=80, np2_hot=60, pmax_hot=0.8,
