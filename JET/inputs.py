@@ -19,7 +19,7 @@ sys.path.append('/home/christiang/Skrivbord/DREAM/tools/eqget')
 from EQDSK import EQDSK
 
 # Pick one
-SHOT = 5
+SHOT = 1
 
 fp      = '../JETdata/DDB_Runaways_ArBt_scan.h5'
 pulses  = ['85021', '85445', '85450', '85451', '85453', '85943']
@@ -38,12 +38,10 @@ ptx = equil['ptx'][:]
 psi_apRp = equil['psi_apRp'][:]
 # Get each psi_apRp
 psi_apRp      = np.array([arr.item() for arr in psi_apRp])
-print(psi_apRp)
-
 a             = ptx[-1,-1] # 0.901
 R0            = eqdsk.R0
-psi_n         = psi_apRp #* a / R0
-print(psi_n)
+psi_physical  = psi_apRp
+psi_n         = psi_apRp / psi_apRp[-1]
 #B0            = 3.45
 plasma_volume = 100 # m3
 Ti            = 300 #  assumption for impurities, K
@@ -63,17 +61,10 @@ Ip0     = -p0['Ip_A'][:] # positive current
 D2      = p0['D2_Pam3'][:]
 Ar      = p0['Ar_Pam3'][:]
 
-#psi_n_tmp = psi_n / psi_n[-1]
-#psi_n = psi_n_tmp
-#print(psi_n)
-
-#R, Z          = eqdsk.get_flux_surface(psi_n[0])
-#j_tor         = eqdsk.get_Jtor(R, Z)
-#j_tor_at_Bmin = eqdsk.get_Jtor_at_Bmin(psi_n)
-#j_par_at_Bmin = eqdsk.get_Jpar_at_Bmin(psi_n)
-#r             = eqdsk.get_r(psi_n)
-#print(j_par_at_Bmin)
+j_par_at_Bmin = eqdsk.get_Jpar_at_Bmin(psi_n)
+r             = eqdsk.get_r(psi_n)
 #print(r)
+#print(j_par_at_Bmin)
 
 def impurity_density(impurity):
     """
