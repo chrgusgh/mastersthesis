@@ -2,8 +2,9 @@
 
 import argparse
 import copy
-from driver import a, bar, generate_baseline, parse_args, simulate, MODE_FLUID, MODE_ISOTROPIC
+from driver import bar, generate_baseline, parse_args, simulate, MODE_FLUID, MODE_ISOTROPIC
 from driver import SCAN_NONE, SCAN_NEON, SCAN_NRE, SCAN_CURRENT
+import inputs as inputs
 # from visualize import disruption_summary
 
 # from scans import doscan
@@ -11,8 +12,6 @@ from driver import SCAN_NONE, SCAN_NEON, SCAN_NRE, SCAN_CURRENT
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
-
-import inputs as inputs
 
 def get_settings(argv):
     args = parse_args(argv)
@@ -40,8 +39,8 @@ def get_settings(argv):
         'n0r': inputs.n0r,
         #'j0': lambda r : np.ones(r.shape),
         #'j0r': None,
-        #'j0': inputs.j_par_at_Bmin,
-        #'j0r': inputs.r,
+        'j0': inputs.j_par_at_Bmin,
+        'j0r': inputs.r,
         'T0': inputs.T0,
         'T0r': inputs.T0r,
         'E0': 1,

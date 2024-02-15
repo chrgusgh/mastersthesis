@@ -8,6 +8,8 @@ from pathlib import Path
 from scipy.constants import c, e
 from scipy.constants import k as k_B
 import sys
+import utils as utils
+import inputs as inputs
 
 #sys.path.append('/mnt/HDD/software/DREAM')
 #sys.path.append('/mnt/HDD/software/DREAM/build/dreampyface/cxx')
@@ -32,10 +34,10 @@ import DREAM.Settings.TransportSettings as Transport
 
 
 # TODO: Update
-R0 = 0.88
-a  = 0.25
-b  = 0.30
-B0 = 1.45
+R0 = inputs.R0
+a  = inputs.a
+#b  = 0.30
+#B0 = 1.45
 
 MODE_FLUID = 1
 MODE_ISOTROPIC = 2
@@ -143,59 +145,6 @@ def terminate_current(Ip, sim):
     return Ip_data['x'][-1,0] >= Ip
 
 
-def magnetic_perturbation(ds, dBB0, tmax, nt, nr, mode=MODE_ISOTROPIC):
-    """
-    Set up the magnetic perturbation for the given simulation object
-    """
-    q = 1
-    t = linspace(0, tmax, nt)
-    r = np.linspace(0, a, nr)
-
-    profile = np.ones(nr)
-    dBB = dBB0 * profile
-    Drr = np. pi * R0 * q * c * dBB ** 2
-    Drr = np.tile(Drr, (nt, 1))
-    ds.eqsys.n_re.transport.setBoundaryCondition(Transport.BC_F_0)
-    ds.eqsys.n_re.transport.prescribeDiffusion(Drr, t=t, r=r)
-
-    if dBB0 == 0:
-        dBB = 4e-4 * profile
-        ds.eqsys.n_re.transport.type = Transport.TRANSPORT_NONE
-
-    ds.eqsys.T_cold.transport.setBoundaryCondition(Transport.BC_F_0)
-    ds.eqsys.T_cold.transport.setMagneticPerturbation(dBB=np.tile(dBB, (nt, 1)), r=r, t=t)
-
-    if mode == MODE_ISOTROPIC:
-        ds.eqsys.f_hot.transport.setBoundaryCondition(Transport.BC_F_0)
-        ds.eqsys.f_hot.transport.setMagneticPerturbation(dBB=np.tile(dBB, (nt, 1)), r=r, t=t)
-
-    return ds
-
-def eval_TQ_time(do, quench_threshold_fraction=1/1000):
-    """
-    Evaluate the thermal quench time in a Tokamak reactor simulation.
-
-    Parameters:
-    - do: Data object containing simulation results, including time grid and temperature profiles.
-    -quench_threshold_fraction: Fraction of the initial temperature defining a quench event (default: 1/1000).
-
-    Returns:
-    - Time of thermal quench, or None if no quench occurs within the data range.
-    """
-    if not hasattr(do, 'grid'):
-        raise ValueError("Data object does not have the required attributes for evaluation.")
-      
-    t = do.grid.t[:]
-    Tmean = np.mean(do.eqsys.T_cold, axis=1)
-    maxT = Tokamak.T_initial
-            
-    # Identify the first time point where temperature falls below the threshold
-    quench_index = np.where(Tmean <= quench_threshold_fraction * maxT)[0]
-    if quench_index.size > 0:
-        return t[quench_index[0]]
-    else:
-        return None
-
 def setup_runawaygrid(ds, equilibrium):
     """
     Set up the runaway grid for the given simulation object.
@@ -217,7 +166,7 @@ def setup_runawaygrid(ds, equilibrium):
         ds.runawaygrid.setBiuniformGrid(thetasep=np.pi-0.6, nthetasep_frac=0.5)
 
 
-def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, nt=1, tMax=1e-11, nr=10, reltol=1e-6, nre0=None, nre0_r=0, j0=None, j0r=None, T0=1e3, T0r=None, tauwall=None, Vloop=None, withfre=False, E0=None, E0r=None, Ip0=200e3, n0=1e19, n0r=None, nxi_hot=15, np1_hot=80, np2_hot=60, pmax_hot=0.8, dBB0 = 1e-3, runInit=True, verboseInit=False, prefix='output/generic', extension='', **kwargs):
+def generate_baseline(mode=MODE_FLUID, equilibrium=None, nt=1, tMax=1e-11, nr=10, reltol=1e-6, nre0=None, nre0_r=0, j0=None, j0r=None, T0=1e3, T0r=None, tauwall=None, Vloop=None, withfre=False, E0=None, E0r=None, Ip0=200e3, n0=1e19, n0r=None, nxi_hot=15, np1_hot=80, np2_hot=60, pmax_hot=0.8, dBB0 = 1e-3, runInit=True, verboseInit=False, prefix='output/generic', extension='', **kwargs):
     """
     Generate a baseline TCV disruption simulation object.
 
@@ -250,8 +199,7 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, nt=1, tMax=1e-11, n
         ds.radialgrid.setMinorRadius(a)
         ds.radialgrid.setB0(B0)
 
-    a = 0.901 # Hard coded for now
-    ds.radialgrid.setWallRadius(1.1*a)
+    ds.radialgrid.setWallRadius(1.1*a) # An assumption
     ds.radialgrid.setNr(nr)
 
     ds.eqsys.E_field.setType(ElectricField.TYPE_PRESCRIBED_OHMIC_CURRENT)
@@ -286,8 +234,6 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, nt=1, tMax=1e-11, n
 
     n0r, n0 = get_profile('electron density', n0r, n0, default=1e19)
     
-    print('n0:', n0)
-
     ds.eqsys.n_i.addIon(name='D', Z=1, Z0=1, iontype=Ions.IONS_DYNAMIC, T=T0, r=T0r, n=n0(T0r))
 
     ds.timestep.setTmax(tMax)
@@ -408,9 +354,6 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, nt=1, tMax=1e-11, n
             ignorelist = ['n_i', 'N_i', 'W_i']
 
         ds.eqsys.n_re.setDreicer(RunawayElectrons.DREICER_RATE_DISABLED)
-        
-        # Set magnetic perturbation
-        magnetic_perturbation(ds, dBB0, tmax, nt, nr, mode)
         
         # Kinetic ionization
         ds.eqsys.n_i.setIonization(Ions.IONIZATION_MODE_KINETIC_APPROX_JAC)
