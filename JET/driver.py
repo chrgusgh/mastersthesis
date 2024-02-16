@@ -166,7 +166,7 @@ def setup_runawaygrid(ds, equilibrium):
         ds.runawaygrid.setBiuniformGrid(thetasep=np.pi-0.6, nthetasep_frac=0.5)
 
 
-def generate_baseline(mode=MODE_FLUID, equilibrium=None, nt=1, tMax=1e-11, nr=10, reltol=1e-6, nre0=None, nre0_r=0, j0=None, j0r=None, T0=1e3, T0r=None, tauwall=None, Vloop=None, withfre=False, E0=None, E0r=None, Ip0=200e3, n0=1e19, n0r=None, nxi_hot=15, np1_hot=80, np2_hot=60, pmax_hot=0.8, dBB0 = 1e-3, runInit=True, verboseInit=False, prefix='output/generic', extension='', **kwargs):
+def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, nt=1, tMax=1e-11, nr=10, reltol=1e-6, nre0=None, nre0_r=0, j0=None, j0r=None, T0=1e3, T0r=None, tauwall=None, Vloop=None, withfre=False, E0=None, E0r=None, Ip0=200e3, n0=1e19, n0r=None, nxi_hot=15, np1_hot=80, np2_hot=60, pmax_hot=0.8, dBB0 = 1e-3, runInit=True, verboseInit=False, prefix='output/generic', extension='', **kwargs):
     """
     Generate a baseline TCV disruption simulation object.
 
@@ -434,6 +434,7 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0,
     ##########################################
     # Add injected impurities
     for i in impurities:
+        print('i[n]:', i['n'])
         ds1.eqsys.n_i.addIon(i['name'], Z=i['Z'], iontype=Ions.IONS_DYNAMIC_NEUTRAL, n=i['n'], T=Ti0)
 
     # Prescribe heat diffusion?
@@ -458,6 +459,17 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0,
     else:
         try: do1 = DREAMOutput(IONIZOUT)
         except: do1 = None
+
+
+    ds2 = DREAMSettings(ds1)
+    dBB = 4e-4 # Remnant heat transport after TQ
+    ds2.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB)
+
+    ds2.timestep.setTmax(3e-2 - t_sim)
+    ds2.timestep.setDt(dtmax)
+    ds2.timestep.setType(TimeStepper.TYPE_CONSTANT)
+
+    do2 = runiface(ds2, f'output_CQ.h5')
 
     """
     ##########################################

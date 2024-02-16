@@ -63,6 +63,8 @@ D2      = p0['D2_Pam3'][:]
 Ar      = p0['Ar_Pam3'][:]
 n_D2 = impurity_density(D2)
 n_Ar = impurity_density(Ar)
+print('D2:',n_D2)
+print('Ar:',n_Ar)
 j_par_at_Bmin = eqdsk.get_Jpar_at_Bmin(psi_n)
 r             = eqdsk.get_r(psi_n)
 #print(r)
