@@ -6,9 +6,7 @@ from driver import bar, generate_baseline, parse_args, simulate, MODE_FLUID, MOD
 from driver import SCAN_NONE, SCAN_NEON, SCAN_NRE, SCAN_CURRENT
 import inputs as inputs
 # from visualize import disruption_summary
-
 # from scans import doscan
-
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
@@ -53,9 +51,10 @@ def get_settings(argv):
         # Time settings
         #'t_ioniz':  1e-6,
         #'nt_ioniz': 8000,
-        't_sim': 1e-2,
-        'dt0': 2e-10,
-        'dtmax': 1e-5,
+        #'t_sim': 1e-2,
+        't_sim': inputs.tau_TQ,
+        'dt0': 2e-13,
+        'dtmax': 1e-6,
         'runIoniz': args.runfrom <= 1,
         'runTQ':    args.runfrom <= 2,
         'verboseIoniz': (1 in args.verbose),
@@ -69,7 +68,7 @@ def run_disruption_simulation(args, settings):
     ds = generate_baseline(equilibrium=None if args.cylindrical else f'../JETdata/{inputs.mag_eq_fn}',
         runInit=(args.runfrom <= 0), verboseInit=(0 in args.verbose), **settings)
 
-    doMain, _ = simulate(ds, **settings)
+    doMain, _ = simulate(ds1=ds, Drr = inputs.Drr, dBB0 = inputs.dBB_cold, **settings)
 
     return doMain
 

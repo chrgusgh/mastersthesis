@@ -8,7 +8,6 @@ from pathlib import Path
 from scipy.constants import c, e
 from scipy.constants import k as k_B
 import sys
-import utils as utils
 import inputs as inputs
 
 #sys.path.append('/mnt/HDD/software/DREAM')
@@ -166,7 +165,7 @@ def setup_runawaygrid(ds, equilibrium):
         ds.runawaygrid.setBiuniformGrid(thetasep=np.pi-0.6, nthetasep_frac=0.5)
 
 
-def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, nt=1, tMax=1e-11, nr=10, reltol=1e-6, nre0=None, nre0_r=0, j0=None, j0r=None, T0=1e3, T0r=None, tauwall=None, Vloop=None, withfre=False, E0=None, E0r=None, Ip0=200e3, n0=1e19, n0r=None, nxi_hot=15, np1_hot=80, np2_hot=60, pmax_hot=0.8, dBB0 = 1e-3, runInit=True, verboseInit=False, prefix='output/generic', extension='', **kwargs):
+def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, nt=1, tMax=1e-11, nr=10, reltol=1e-6, nre0=None, nre0_r=0, j0=None, j0r=None, T0=1e3, T0r=None, tauwall=None, Vloop=None, withfre=False, E0=None, E0r=None, Ip0=200e3, n0=1e19, n0r=None, nxi_hot=15, np1_hot=80, np2_hot=60, pmax_hot=0.8, runInit=True, verboseInit=False, prefix='output/generic', extension='', **kwargs):
     """
     Generate a baseline TCV disruption simulation object.
 
@@ -354,7 +353,7 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, nt=1, tMax=1e-11, n
             ignorelist = ['n_i', 'N_i', 'W_i']
 
         ds.eqsys.n_re.setDreicer(RunawayElectrons.DREICER_RATE_DISABLED)
-        
+
         # Kinetic ionization
         ds.eqsys.n_i.setIonization(Ions.IONIZATION_MODE_KINETIC_APPROX_JAC)
         #ds.eqsys.n_i.setIonization(Ions.IONIZATION_MODE_FLUID)
@@ -415,7 +414,7 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, nt=1, tMax=1e-11, n
     return ds
 
 
-def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0,
+def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, dBB0=1e-3,
     nre0=None, nre0_r=0,
     verboseIoniz=False, runIoniz=True, verboseTQ=False, runTQ=True,
     prefix='output/generic', extension='', **kwargs):
@@ -428,24 +427,29 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0,
     outname = lambda phase : longoutname(mode=mode, phase=phase, prefix=prefix, extension=extension)
 
     Ti0 = 1
-
+    print(f'In simulate: {Drr}, {dBB0}')
     ##########################################
     # 1. Ionization phase of TQ (~1 µs)
     ##########################################
     # Add injected impurities
     for i in impurities:
-        print('i[n]:', i['n'])
+        #print('i[n]:', i['n'])
         ds1.eqsys.n_i.addIon(i['name'], Z=i['Z'], iontype=Ions.IONS_DYNAMIC_NEUTRAL, n=i['n'], T=Ti0)
 
     # Prescribe heat diffusion?
     if Drr > 0:
-        ds1.eqsys.T_cold.transport.prescribeDiffusion(drr=Drr)
+        pass
+        #ds1.eqsys.T_cold.transport.prescribeDiffusion(drr=Drr)
+        #ds1.eqsys.n_re.transport.prescribeDiffusion(drr=Drr)
+
+    ds1.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB0)
+    ds1.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB0)
 
     #ds1.timestep.setTmax(t_ioniz)
     #ds1.timestep.setNt(nt_ioniz)
 
     #if nt_ioniz > 5000:
-    #    ds1.timestep.setNumberOfSaveSteps(5000)
+    ##    ds1.timestep.setNumberOfSaveSteps(5000)
     #ds1.timestep.setIonization(dtmax=5e-7, tmax=t_TQ, safetyfactor=800)
     ds1.timestep.setIonization(dt0=dt0, dtmax=dtmax, tmax=t_sim)
 
@@ -464,12 +468,12 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0,
     ds2 = DREAMSettings(ds1)
     dBB = 4e-4 # Remnant heat transport after TQ
     ds2.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB)
-
+    ds2.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB)
     ds2.timestep.setTmax(3e-2 - t_sim)
     ds2.timestep.setDt(dtmax)
     ds2.timestep.setType(TimeStepper.TYPE_CONSTANT)
 
-    do2 = runiface(ds2, f'output_CQ.h5')
+    do2 = runiface(ds2, f'output/output_CQ.h5')
 
     """
     ##########################################
