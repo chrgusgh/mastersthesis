@@ -8,7 +8,6 @@ from scipy.interpolate import UnivariateSpline
 from scipy.constants import c, e
 from scipy.constants import k as k_B
 import sys
-import inputs as inputs
 
 #sys.path.append('/mnt/HDD/software/DREAM')
 #sys.path.append('/mnt/HDD/software/DREAM/build/dreampyface/cxx')
@@ -33,8 +32,8 @@ import DREAM.Settings.TransportSettings as Transport
 
 
 # TODO: Update
-R0 = inputs.R0
-a  = inputs.a
+#R0 = inputs.R0
+#a  = inputs.a
 #b  = 0.30
 #B0 = 1.45
 
@@ -165,13 +164,20 @@ def setup_runawaygrid(ds, equilibrium):
         ds.runawaygrid.setBiuniformGrid(thetasep=np.pi-0.6, nthetasep_frac=0.5)
 
 
-def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, nt=1, tMax=1e-11, nr=10, reltol=1e-6, nre0=None, nre0_r=0, j0=None, j0r=None, T0=1e3, T0r=None, tauwall=None, Vloop=None, withfre=False, E0=None, E0r=None, Ip0=200e3, n0=1e19, n0r=None, nxi_hot=15, np1_hot=80, np2_hot=60, pmax_hot=0.8, runInit=True, verboseInit=False, prefix='output/generic', extension='', **kwargs):
+def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt=1, tMax=1e-11, nr=10, reltol=1e-6, nre0=None, nre0_r=0, j0=None, j0r=None, T0=1e3, T0r=None, tauwall=None, Vloop=None, withfre=False, E0=None, E0r=None, Ip0=200e3, n0=1e19, n0r=None, nxi_hot=15, np1_hot=80, np2_hot=60, pmax_hot=0.8, runInit=True, verboseInit=False, prefix='output/generic', extension='', **kwargs):
     """
     Generate a baseline TCV disruption simulation object.
 
     :param mode:        Type of hot electron model to use (fluid or isotropic).
     :param equilibrium: Name of equilibrium data file to use, or ``None`` for generic TCV-like cylindrical equilibrium.
     """
+    if simulation:
+        a = simulation.a
+        R0 = simulation.R0
+    else:
+        a = 0.9
+        R0 = 2.92
+
     j0r, j0 = get_profile('current density', j0r, j0, default=lambda r : (1 - (1-0.001**(1/0.41))*(r/a)**2)**0.41)
     T0r, T0 = get_profile('electron temperature', T0r, T0, default=lambda x : 1e3, evaluate=True)
 
@@ -437,8 +443,8 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, dBB0=1e-3,
         ds1.eqsys.n_i.addIon(i['name'], Z=i['Z'], iontype=Ions.IONS_DYNAMIC_NEUTRAL, n=i['n'], T=Ti0)
 
     # Prescribe heat diffusion?
-    if Drr > 0:
-        pass
+    #if Drr > 0:
+    #    pass
         #ds1.eqsys.T_cold.transport.prescribeDiffusion(drr=Drr)
         #ds1.eqsys.n_re.transport.prescribeDiffusion(drr=Drr)
 

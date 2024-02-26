@@ -7,3 +7,4 @@ JET/__pycache__
 JET/.driver.py.swp
 JET/move_outputs.sh
 JET/cleanup.sh
+remnants/
