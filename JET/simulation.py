@@ -62,6 +62,7 @@ class TokamakSimulation:
         self.m_e_eV = const.m_e / const.e
         self.T_i = np.median(self.T0[0])
         self.T_f = 100  # Final temperature in eV
+        # TODO: streamline this to accomodate for fluid 1e-9 and isotropic 1e-11.
         self.dt0 = 1e-9
         self.dtmax = 1e-5
 
@@ -137,6 +138,3 @@ class TokamakSimulation:
         with open(log_file_path, "w") as log_file:
             for var_name, value in variables_to_log.items():
                 log_file.write(f"{var_name} = {value}\n")
-
-
-simulate = TokamakSimulation()

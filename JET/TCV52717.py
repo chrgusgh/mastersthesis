@@ -68,20 +68,22 @@ def get_settings(argv, simulation):
 def run_disruption_simulation(args, settings, simulation):
     ds = generate_baseline(equilibrium=None if args.cylindrical else f'../JETdata/{simulation.mag_eq_fn}', simulation=simulation, runInit=(args.runfrom <= 0), verboseInit=(0 in args.verbose), **settings)
 
-    doMain, _ = simulate(ds1=ds, Drr = simulation.Drr, dBB0 = simulation.dBB_cold, **settings)
+    do_TQ, _, do_CQ, _ = simulate(ds1=ds, Drr = simulation.Drr, dBB0 = simulation.dBB_cold, **settings)
 
-    return doMain
+    return do_TQ, do_CQ
 
 
 def main(argv):
-    simulation = TokamakSimulation()
+    # TODO: streamline this.
+    simulation = TokamakSimulation(dBB_cold=1e-3, assimilation=0.2)
     args, settings = get_settings(argv, simulation)
 
     if args.scan == SCAN_NONE:
         print("Neon density: {} x 10^19 m^-3".format(settings['impurities'][0]['n']/1e19))
-        doMain = run_disruption_simulation(args, settings, simulation)
-        disruption_summary(doMain)
+        do_TQ, do_CQ = run_disruption_simulation(args, settings, simulation)
+        #disruption_summary(do_TQ)
     else:
+        print("If this statement is reached, the world has come to an end!")
         doscan(args.scan, args, settings, run_disruption_simulation)
 
     return 0
@@ -89,5 +91,3 @@ def main(argv):
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
-
-

@@ -514,7 +514,7 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, dBB0=1e-3,
 
     return do1, do2, ds2
     """
-    return do1, ds1
+    return do1, ds1, do2, ds2
 
 
 def plateau_simulation(dso, mode, tmax, index=0, **kwargs):
