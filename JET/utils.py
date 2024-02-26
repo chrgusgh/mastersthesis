@@ -30,7 +30,7 @@ def calculate_v_th(T_final, m_e_eV):
     """
     return np.sqrt(2 * T_final / m_e_eV)
 
-def calculate_dBB(a, R0, T_final, t_TQ, v_th):
+def calculate_dBB(a, R0, t_TQ, v_th):
     """
     Calculate the magnetic perturbation parameter dBB.
 
@@ -43,7 +43,7 @@ def calculate_dBB(a, R0, T_final, t_TQ, v_th):
     Returns:
     - dBB: Magnetic perturbation parameter.
     """
-    return np.sqrt(a / np.sqrt(const.pi * t_TQ * R0 * v_th))
+    return a / np.sqrt(const.pi * t_TQ * R0 * v_th)
 
 def calculate_D(a, t_TQ):
     """
@@ -58,7 +58,7 @@ def calculate_D(a, t_TQ):
     """
     return a ** 2 / t_TQ
 
-def calculate_Drr(R0, q, dBB_grid):
+def calculate_Drr(R0, q, dBB):
     """
     Calculate the diffusion coefficient D based on the Rechester-Rosenbluth formula.
 
@@ -66,12 +66,12 @@ def calculate_Drr(R0, q, dBB_grid):
     - R0: Major radius of the tokamak.
     - q: Charge quantity.
     - c: Speed of light in vacuum.
-    - dBB_grid: Grid of magnetic perturbation values.
+    - dBB: Magnetic perturbation values.
 
     Returns:
     - D: Diffusion coefficient.
     """
-    return const.pi * R0 * q * const.c * dBB_grid ** 2
+    return const.pi * R0 * q * const.c * dBB ** 2
 
 def calculate_tau_TQ(t_TQ, T_init, T_final):
     """

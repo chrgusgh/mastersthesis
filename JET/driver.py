@@ -3,8 +3,8 @@
 import argparse
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.interpolate import UnivariateSpline
 from pathlib import Path
+from scipy.interpolate import UnivariateSpline
 from scipy.constants import c, e
 from scipy.constants import k as k_B
 import sys
@@ -442,15 +442,18 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, dBB0=1e-3,
         #ds1.eqsys.T_cold.transport.prescribeDiffusion(drr=Drr)
         #ds1.eqsys.n_re.transport.prescribeDiffusion(drr=Drr)
 
+    ds1.eqsys.T_cold.transport.setBoundaryCondition(Transport.BC_F_0)
     ds1.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB0)
+    
+    ds1.eqsys.f_hot.transport.setBoundaryCondition(Transport.BC_F_0)
     ds1.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB0)
-
     #ds1.timestep.setTmax(t_ioniz)
     #ds1.timestep.setNt(nt_ioniz)
 
     #if nt_ioniz > 5000:
-    ##    ds1.timestep.setNumberOfSaveSteps(5000)
+    #    ds1.timestep.setNumberOfSaveSteps(5000)
     #ds1.timestep.setIonization(dtmax=5e-7, tmax=t_TQ, safetyfactor=800)
+    #t_sim = 2e-4
     ds1.timestep.setIonization(dt0=dt0, dtmax=dtmax, tmax=t_sim)
 
     ds1.solver.setVerbose(verboseIoniz)
@@ -466,9 +469,9 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, dBB0=1e-3,
 
 
     ds2 = DREAMSettings(ds1)
-    dBB = 4e-4 # Remnant heat transport after TQ
-    ds2.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB)
-    ds2.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB)
+    dBB1 = 4e-4 # Remnant heat transport after TQ
+    ds2.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB1)
+    ds2.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB1)
     ds2.timestep.setTmax(3e-2 - t_sim)
     ds2.timestep.setDt(dtmax)
     ds2.timestep.setType(TimeStepper.TYPE_CONSTANT)
