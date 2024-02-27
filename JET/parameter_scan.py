@@ -7,6 +7,33 @@ from utils import calculate_t_CQ
 import sys
 import subprocess
 
+def get_data(do_TQ, do_CQ, simulation):
+    """
+    Gets data from DREAM output files
+
+    Returns:
+    - I_RE_final: Final runaway current of CQ phase
+    - tau_CQ: Current quench time estimate in seconds.
+    """
+
+    I_RE_final = do_CQ.eqsys.j_re.current()[-1]
+    
+    I_Ohm_TQ = do_TQ.eqsys.j_ohm.current()[:]
+    I_Ohm_CQ = do_CQ.eqsys.j_ohm.current()[1:]
+    I_Ohm = np.append(I_Ohm_TQ, I_Ohm_CQ)
+
+    #I_p_TQ = do_TQ.eqsys.I_p[:]
+    #I_p_CQ = do_CQ.eqsys.I_p[1:]
+    #I_p = np.append(I_p_TQ, I_p_CQ)
+
+    t_TQ = do_TQ.grid.t[:]
+    t_CQ = do_CQ.grid.t[1:] + t_TQ[-1]
+    t = np.append(t_TQ, t_CQ)
+    
+    tau_CQ = calculate_t_CQ(I_Ohm, simulation.Ip0, t)
+
+    return I_RE_final, tau_CQ
+
 def save_simulation_data(simulation, dBB, assimilation):
     """
     Runs the save_parameter_scan_data.sh script, which stores the current simulation data in
@@ -22,27 +49,16 @@ def run_DREAM_simulation(argv, dBB, assimilation):
     Replace this with actual calls to your DREAM simulation, configured with
     dBB and assimilation parameters, and returning the final RE current.
     """
-    I_RE_final = dBB * 800 * assimilation / 100  # Example calculation
-    t_CQ = 0.01
-    # TODO: get correct final RE current
-    # TODO: calculate t_TQ and implement formula
-    
     simulation = TokamakSimulation(dBB_cold=dBB, assimilation=assimilation)
     args, settings = get_settings(argv, simulation)
     do_TQ, do_CQ = run_disruption_simulation(args, settings, simulation)
     
     time.sleep(1)
     
-    #I_RE_final = do_CQ.j_re[-1]
-    #I_Ohm_CQ = do_CQ.j_Ohm
-    #I_p = do_CQ.I_p
-    #t = do_CQ.t
-
-    #t_CQ = calculate_t_CQ(I_Ohm_CQ, I_p, t)
-
+    I_RE_final, tau_CQ = get_data(do_TQ, do_CQ, simulation)
     save_simulation_data(simulation, dBB, assimilation)
 
-    return I_RE_final, t_CQ
+    return I_RE_final, tau_CQ
 
 def perform_parameter_scan(argv, dBB_range, assimilation_range):
     """
@@ -59,16 +75,16 @@ def perform_parameter_scan(argv, dBB_range, assimilation_range):
     dBB_values = np.linspace(dBB_range[0], dBB_range[1], 20)  # Define dBB values range
     assimilation_values = np.linspace(assimilation_range[0], assimilation_range[1], 100) * 1e-2  # Define assimilation values range
     RE_current_results = np.zeros((len(dBB_values), len(assimilation_values)))  # Initialize results matrix
-    t_CQ_results = RE_current_results
+    tau_CQ_results = RE_current_results
     
     # Parameter scan
     for i, dBB in enumerate(dBB_values):
         for j, assimilation in enumerate(assimilation_values):
-            I_RE_final, t_CQ = run_DREAM_simulation(argv, dBB, assimilation)
+            I_RE_final, tau_CQ = run_DREAM_simulation(argv, dBB, assimilation)
             RE_current_results[i, j] = I_RE_final
-            t_CQ_results[i, j] = t_CQ
+            tau_CQ_results[i, j] = tau_CQ
 
-    return dBB_values, assimilation_values, RE_current_results
+    return dBB_values, assimilation_values, RE_current_results, tau_CQ_results
 
 def plot_contour(dBB_values, assimilation_values, RE_current_results):
     """
@@ -92,7 +108,10 @@ def main(argv):
     assimilation_range = (1, 100) # From 1% to 100%
 
     # Perform the parameter scan
-    dBB_values, assimilation_values, RE_current_results = perform_parameter_scan(argv, dBB_range, assimilation_range)
+    dBB_values, assimilation_values, RE_current_results, tau_CQ_results = perform_parameter_scan(argv, dBB_range, assimilation_range)
+
+    np.savetxt('I_RE_final.txt', RE_current_results, fmt='%f')
+    np.savetxt('tau_CQ.txt', tau_CQ_results, fmt='%f')
 
     plot_contour(dBB_values, assimilation_values, RE_current_results)
 
