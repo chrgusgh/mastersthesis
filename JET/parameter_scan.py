@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import time
 from simulation import TokamakSimulation
 from TCV52717 import get_settings, run_disruption_simulation
+from utils import calculate_t_CQ
 import sys
 import subprocess
 
@@ -21,18 +22,27 @@ def run_DREAM_simulation(argv, dBB, assimilation):
     Replace this with actual calls to your DREAM simulation, configured with
     dBB and assimilation parameters, and returning the final RE current.
     """
-    final_RE_current = dBB * 800 * assimilation / 100  # Example calculation
-    #return final_RE_current
-    # TODO: implement choice of mode.
+    I_RE_final = dBB * 800 * assimilation / 100  # Example calculation
+    t_CQ = 0.01
     # TODO: get correct final RE current
     # TODO: calculate t_TQ and implement formula
+    
     simulation = TokamakSimulation(dBB_cold=dBB, assimilation=assimilation)
     args, settings = get_settings(argv, simulation)
     do_TQ, do_CQ = run_disruption_simulation(args, settings, simulation)
-    #return do_CQ.j_re[-1]
+    
     time.sleep(1)
+    
+    #I_RE_final = do_CQ.j_re[-1]
+    #I_Ohm_CQ = do_CQ.j_Ohm
+    #I_p = do_CQ.I_p
+    #t = do_CQ.t
+
+    #t_CQ = calculate_t_CQ(I_Ohm_CQ, I_p, t)
+
     save_simulation_data(simulation, dBB, assimilation)
-    return final_RE_current
+
+    return I_RE_final, t_CQ
 
 def perform_parameter_scan(argv, dBB_range, assimilation_range):
     """
@@ -47,13 +57,16 @@ def perform_parameter_scan(argv, dBB_range, assimilation_range):
     """
 
     dBB_values = np.linspace(dBB_range[0], dBB_range[1], 20)  # Define dBB values range
-    assimilation_values = np.linspace(assimilation_range[0], assimilation_range[1], 100)  # Define assimilation values range
+    assimilation_values = np.linspace(assimilation_range[0], assimilation_range[1], 100) * 1e-2  # Define assimilation values range
     RE_current_results = np.zeros((len(dBB_values), len(assimilation_values)))  # Initialize results matrix
+    t_CQ_results = RE_current_results
+    
     # Parameter scan
     for i, dBB in enumerate(dBB_values):
         for j, assimilation in enumerate(assimilation_values):
-            RE_current_results[i, j] = run_DREAM_simulation(argv, dBB, assimilation)
-
+            I_RE_final, t_CQ = run_DREAM_simulation(argv, dBB, assimilation)
+            RE_current_results[i, j] = I_RE_final
+            t_CQ_results[i, j] = t_CQ
 
     return dBB_values, assimilation_values, RE_current_results
 
@@ -76,7 +89,7 @@ def plot_contour(dBB_values, assimilation_values, RE_current_results):
 def main(argv):
     # Define the ranges for dBB and assimilation
     dBB_range = (5e-4, 1e-2)  # From 5e-4 to 1e-2
-    assimilation_range = (1, 100)  # From 1% to 100%
+    assimilation_range = (1, 100) # From 1% to 100%
 
     # Perform the parameter scan
     dBB_values, assimilation_values, RE_current_results = perform_parameter_scan(argv, dBB_range, assimilation_range)

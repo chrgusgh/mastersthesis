@@ -87,4 +87,24 @@ def calculate_tau_TQ(t_TQ, T_init, T_final):
     """
     return t_TQ * np.log(T_init / T_final)
 
+def calculate_t_CQ(I_Ohm, I_p, t):
+    """
+    Calculates the current quench time from The formula.
 
+    Parameters:
+    - I_Ohm: Ohmic current array
+    - I_p: Plasma current
+    - t: Time array for current quench phase
+
+    Returns:
+    - t_CQ: Current quench time in seconds.
+    """
+    I_Ohm_init = I_Ohm[0]
+    lb = 0.79 * I_Ohm_init
+    ub = 0.81 * I_Ohm_init
+    indices = np.where((I_Ohm >= lb) & (I_Ohm <= ub))[0]
+    I_Ohm_80_idx = indices[0]
+    t_80 = t[I_Ohm_80_idx]
+    t_last = t[-1]
+
+    return (t_80 - t_last) / (0.8 - I_Ohm_init / I_p)
