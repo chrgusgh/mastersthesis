@@ -40,10 +40,10 @@ class TokamakSimulation:
     def load_shot_data(self):
         """Loads data for the specified tokamak shot and magnetic equilibrium configuration."""
         self.f = h5py.File(self.fp, 'r')
-        self.strr = self.pulses[self.SHOT]
-        self.p0 = self.f[self.strr]
-        self.mag_eq_fn = f'mag_eq_{self.strr}_data.h5'
-        self.eqdsk = EQDSK(f'../JETdata/g_JET_ehtr_{self.strr}_t62.3990_62.4010', override_psilim=2e-3)
+        self.discharge = self.pulses[self.SHOT]
+        self.p0 = self.f[self.discharge]
+        self.mag_eq_fn = f'mag_eq_{self.discharge}_data.h5'
+        self.eqdsk = EQDSK(f'../JETdata/g_JET_ehtr_{self.discharge}_t62.3990_62.4010', override_psilim=2e-3)
         self.equil = h5py.File(f'../JETdata/{self.mag_eq_fn}', 'r')['equil']
 
     def initialize_parameters(self):
@@ -63,7 +63,7 @@ class TokamakSimulation:
         self.T_i = np.median(self.T0[0])
         self.T_f = 100  # Final temperature in eV
         # TODO: streamline this to accomodate for fluid 1e-9 and isotropic 1e-11.
-        self.dt0 = 1e-9
+        self.dt0 = 1e-10
         self.dtmax = 1e-5
 
     def process_profiles(self):

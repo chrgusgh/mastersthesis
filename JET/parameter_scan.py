@@ -4,6 +4,16 @@ import time
 from simulation import TokamakSimulation
 from TCV52717 import get_settings, run_disruption_simulation
 import sys
+import subprocess
+
+def save_simulation_data(simulation, dBB, assimilation):
+    """
+    Runs the save_parameter_scan_data.sh script, which stores the current simulation data in
+    ../JETresults/parameter_scans/{pulse number}
+    """
+    dBB_str = str(dBB)
+    assimilation_str = str(assimilation)
+    subprocess.run(['./save_parameter_scan_data.sh', simulation.discharge, dBB_str, assimilation_str], check=True)
 
 def run_DREAM_simulation(argv, dBB, assimilation):
     """
@@ -14,13 +24,14 @@ def run_DREAM_simulation(argv, dBB, assimilation):
     final_RE_current = dBB * 800 * assimilation / 100  # Example calculation
     #return final_RE_current
     # TODO: implement choice of mode.
-    # TODO: fix execution bug, related to output/52717_fluid_output.h5 file. (maybe read but no close)
     # TODO: get correct final RE current
     # TODO: calculate t_TQ and implement formula
     simulation = TokamakSimulation(dBB_cold=dBB, assimilation=assimilation)
     args, settings = get_settings(argv, simulation)
     do_TQ, do_CQ = run_disruption_simulation(args, settings, simulation)
     #return do_CQ.j_re[-1]
+    time.sleep(1)
+    save_simulation_data(simulation, dBB, assimilation)
     return final_RE_current
 
 def perform_parameter_scan(argv, dBB_range, assimilation_range):
@@ -42,7 +53,7 @@ def perform_parameter_scan(argv, dBB_range, assimilation_range):
     for i, dBB in enumerate(dBB_values):
         for j, assimilation in enumerate(assimilation_values):
             RE_current_results[i, j] = run_DREAM_simulation(argv, dBB, assimilation)
-            time.sleep(1)
+
 
     return dBB_values, assimilation_values, RE_current_results
 
