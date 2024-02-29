@@ -106,5 +106,5 @@ def calculate_t_CQ(I_Ohm, Ip0, t):
     I_Ohm_80_idx = indices[0]
     t_80 = t[I_Ohm_80_idx]
     t_last = t[-1]
-    
-    return (t_80 - t_last) / (0.8 - I_Ohm[-1] / Ip0)
+    # note minus sign in front
+    return -(t_80 - t_last) / (0.8 - I_Ohm[-1] / Ip0)

@@ -8,3 +8,6 @@ JET/.driver.py.swp
 JET/move_outputs.sh
 JET/cleanup.sh
 remnants/
+JET/.plot_ps_data.py.swp
+JET/.utils.py.swp
+JET/simulation_settings.log
