@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import re
 
+# used to extract data from local storage
+
 discharge = '85445'
 # Base directory where the folders are stored
 base_dir = f'../JETresults/parameter_scans/{discharge}'  # Adjust YOUR_DISCHARGE_VALUE accordingly
