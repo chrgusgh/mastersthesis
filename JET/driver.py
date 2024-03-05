@@ -351,12 +351,13 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
             ds.eqsys.n_re.setAvalanche(RunawayElectrons.AVALANCHE_MODE_FLUID_HESSLOW)
             ds.collisions.collfreq_mode = Collisions.COLLFREQ_MODE_SUPERTHERMAL
             ds.eqsys.T_cold.setInitialProfile(temperature=1)
+            ignorelist = ['n_i', 'N_i', 'W_i', 'T_cold', 'W_cold', 'n_hot', 'n_cold']
         else:
             ds.eqsys.n_re.setAvalanche(RunawayElectrons.AVALANCHE_MODE_KINETIC, pCutAvalanche=0.01)
             ds.collisions.collfreq_mode = Collisions.COLLFREQ_MODE_FULL
             ds.eqsys.f_hot.setParticleSource(FHot.PARTICLE_SOURCE_EXPLICIT, shape=FHot.PARTICLE_SOURCE_SHAPE_DELTA)
 
-            ignorelist = ['n_i', 'N_i', 'W_i', 'T_cold', 'W_cold', 'n_hot', 'n_cold']
+            ignorelist = ['n_i', 'N_i', 'W_i']
 
         ds.eqsys.n_re.setDreicer(RunawayElectrons.DREICER_RATE_DISABLED)
 
@@ -369,7 +370,7 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
     ds.eqsys.T_cold.setType(Temperature.TYPE_SELFCONSISTENT)
     if mode == MODE_KINETIC:
         ds.eqsys.E_field.setInitialProfile(Einit, radius=Einit_r)
-    else:
+    elif mode == MODE_FLUID:
         ds.eqsys.j_ohm.setInitialProfile(j0(j0r), radius=j0r, Ip0=Ip0)
 
     if tauwall is None:
@@ -414,8 +415,10 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
 
     ds.output.setTiming(True, True)
     
-    if mode == MODE_KINETIC or mode == MODE_ISOTROPIC:
+    if mode == MODE_KINETIC:
         ds.fromOutput(INITFILE, ignore=ignorelist)
+    elif mode == MODE_ISOTROPIC:
+        ds.fromOutput('output.h5', ignore=ignorelist)
 
     return ds
 
@@ -442,22 +445,22 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, Drr2 = 0, dBB0=1e-
         #print('i[n]:', i['n'])
         ds1.eqsys.n_i.addIon(i['name'], Z=i['Z'], iontype=Ions.IONS_DYNAMIC_NEUTRAL, n=i['n'], T=Ti0)
 
-    dBB_vec = np.linspace(1e-2, 4e-4, 1000)
-    tDrr = np.linspace(0, t_TQ, 1000)
+    #dBB_vec = np.linspace(1e-2, 4e-4, 1000)
+    #tDrr = np.linspace(0, t_TQ, 1000)
 
-    Drr_vec = utils.calculate_Drr(R0, q, dBB_vec)
+    #Drr_vec = utils.calculate_Drr(R0, q, dBB_vec)
     # Prescribe heat diffusion?
    # if Drr > 0:
     ds1.eqsys.n_re.transport.setBoundaryCondition(Transport.BC_F_0)
-    ds1.eqsys.n_re.transport.prescribeDiffusion(drr=Drr, t=tDrr)
+    ds1.eqsys.n_re.transport.prescribeDiffusion(drr=Drr)
         #pass
         #ds1.eqsys.T_cold.transport.prescribeDiffusion(drr=Drr)
 
     ds1.eqsys.T_cold.transport.setBoundaryCondition(Transport.BC_F_0)
-    ds1.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB_vec, t=tDrr)
+    ds1.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB0)
     
     ds1.eqsys.f_hot.transport.setBoundaryCondition(Transport.BC_F_0)
-    ds1.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB0_vec, t=tDrr)
+    ds1.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB0)
     #ds1.timestep.setTmax(t_ioniz)
     #ds1.timestep.setNt(nt_ioniz)
 
