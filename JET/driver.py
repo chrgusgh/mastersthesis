@@ -351,7 +351,6 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
             ds.eqsys.n_re.setAvalanche(RunawayElectrons.AVALANCHE_MODE_FLUID_HESSLOW)
             ds.collisions.collfreq_mode = Collisions.COLLFREQ_MODE_SUPERTHERMAL
             ds.eqsys.T_cold.setInitialProfile(temperature=1)
-            ignorelist = ['n_i', 'N_i', 'W_i', 'T_cold', 'W_cold', 'n_hot', 'n_cold']
         else:
             ds.eqsys.n_re.setAvalanche(RunawayElectrons.AVALANCHE_MODE_KINETIC, pCutAvalanche=0.01)
             ds.collisions.collfreq_mode = Collisions.COLLFREQ_MODE_FULL
@@ -370,7 +369,7 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
     ds.eqsys.T_cold.setType(Temperature.TYPE_SELFCONSISTENT)
     if mode == MODE_KINETIC:
         ds.eqsys.E_field.setInitialProfile(Einit, radius=Einit_r)
-    elif mode == MODE_FLUID:
+    else:
         ds.eqsys.j_ohm.setInitialProfile(j0(j0r), radius=j0r, Ip0=Ip0)
 
     if tauwall is None:
@@ -417,8 +416,6 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
     
     if mode == MODE_KINETIC:
         ds.fromOutput(INITFILE, ignore=ignorelist)
-    elif mode == MODE_ISOTROPIC:
-        ds.fromOutput('output.h5', ignore=ignorelist)
 
     return ds
 
