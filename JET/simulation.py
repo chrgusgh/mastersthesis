@@ -63,20 +63,20 @@ class TokamakSimulation:
         self.T_i = np.median(self.T0[0])
         self.T_f = 100  # Final temperature in eV
         # TODO: streamline this to accomodate for fluid 1e-9 and isotropic 1e-11.
-        self.dt0 = 1e-9
+        self.dt0 = 1e-12
         self.dtmax = 1e-5
 
     def process_profiles(self):
         """Processes radial profiles for electron density and temperature."""
-        self.n0r = self.p0['R_Ne_profile_LIDAR_m'][:] - self.R0
+        self.n0r = self.p0['R_Ne_profile_LIDAR_m'][25:-9] - self.R0
         self.n0r_pos = np.where(self.n0r >= 0)
-        self.T0r = self.p0['R_Te_profile_ECE_m'][:] - self.R0
+        self.T0r = self.p0['R_Te_profile_ECE_m'][35:-5] - self.R0
         self.T0r_pos = np.where(self.T0r >= 0)
         # Use filtered data
         self.n0r = self.n0r[self.n0r_pos]
         self.T0r = self.T0r[self.T0r_pos]
-        self.n0 = self.p0['Ne_profile_LIDAR_mm3'][:][self.n0r_pos]
-        self.T0 = self.p0['Te_profile_ECE_eV'][:][self.T0r_pos]
+        self.n0 = self.p0['Ne_profile_LIDAR_mm3'][25:-9][self.n0r_pos]
+        self.T0 = self.p0['Te_profile_ECE_eV'][35:-5][self.T0r_pos]
 
     def update_dependent_parameters(self):
         """Updates simulation parameters that depend on the initial settings."""
@@ -85,11 +85,12 @@ class TokamakSimulation:
         self.n_D2 = utils.impurity_density(self.D2, self.Ti, self.plasma_volume)
         self.n_Ar = utils.impurity_density(self.Ar, self.Ti, self.plasma_volume)
         self.j_par_at_Bmin = np.abs(self.eqdsk.get_Jpar_at_Bmin(self.psi_n))
-        self.r = self.eqdsk.get_r(self.psi_n)
+        self.r = self.eqdsk.get_r(self.psi_n) #OBS inte modifierad.
         self.tau_TQ = utils.calculate_tau_TQ(self.t_TQ, self.T_i, self.T_f)
         self.v_th = utils.calculate_v_th(self.T_f, self.m_e_eV)
         self.dBB_re = self.dBB_cold  # Optionally set this based on additional logic
         self.Drr = utils.calculate_Drr(self.R0, self.q, self.dBB_re)
+        self.Drr2 = utils.calculate_Drr(self.R0, self.q, 4e-4)
 
     def log_simulation_settings(self):
         """

@@ -356,7 +356,7 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
             ds.collisions.collfreq_mode = Collisions.COLLFREQ_MODE_FULL
             ds.eqsys.f_hot.setParticleSource(FHot.PARTICLE_SOURCE_EXPLICIT, shape=FHot.PARTICLE_SOURCE_SHAPE_DELTA)
 
-            ignorelist = ['n_i', 'N_i', 'W_i']
+            ignorelist = ['n_i', 'N_i', 'W_i', 'T_cold', 'W_cold', 'n_hot', 'n_cold']
 
         ds.eqsys.n_re.setDreicer(RunawayElectrons.DREICER_RATE_DISABLED)
 
@@ -414,13 +414,13 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
 
     ds.output.setTiming(True, True)
     
-    if mode == MODE_KINETIC:
+    if mode == MODE_KINETIC or mode == MODE_ISOTROPIC:
         ds.fromOutput(INITFILE, ignore=ignorelist)
 
     return ds
 
 
-def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, dBB0=1e-3,
+def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, Drr2 = 0, dBB0=1e-3,
     nre0=None, nre0_r=0,
     verboseIoniz=False, runIoniz=True, verboseTQ=False, runTQ=True,
     prefix='output/generic', extension='', **kwargs):
@@ -442,17 +442,22 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, dBB0=1e-3,
         #print('i[n]:', i['n'])
         ds1.eqsys.n_i.addIon(i['name'], Z=i['Z'], iontype=Ions.IONS_DYNAMIC_NEUTRAL, n=i['n'], T=Ti0)
 
+    dBB_vec = np.linspace(1e-2, 4e-4, 1000)
+    tDrr = np.linspace(0, t_TQ, 1000)
+
+    Drr_vec = utils.calculate_Drr(R0, q, dBB_vec)
     # Prescribe heat diffusion?
-    #if Drr > 0:
-    #    pass
+   # if Drr > 0:
+    ds1.eqsys.n_re.transport.setBoundaryCondition(Transport.BC_F_0)
+    ds1.eqsys.n_re.transport.prescribeDiffusion(drr=Drr, t=tDrr)
+        #pass
         #ds1.eqsys.T_cold.transport.prescribeDiffusion(drr=Drr)
-        #ds1.eqsys.n_re.transport.prescribeDiffusion(drr=Drr)
 
     ds1.eqsys.T_cold.transport.setBoundaryCondition(Transport.BC_F_0)
-    ds1.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB0)
+    ds1.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB_vec, t=tDrr)
     
     ds1.eqsys.f_hot.transport.setBoundaryCondition(Transport.BC_F_0)
-    ds1.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB0)
+    ds1.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB0_vec, t=tDrr)
     #ds1.timestep.setTmax(t_ioniz)
     #ds1.timestep.setNt(nt_ioniz)
 
@@ -475,9 +480,11 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, dBB0=1e-3,
 
 
     ds2 = DREAMSettings(ds1)
-    dBB1 = 4e-4 # Remnant heat transport after TQ
-    ds2.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB1)
-    ds2.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB1)
+    dBB2 = 4e-4 # Remnant heat transport after TQ
+
+    ds2.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB2)
+    ds2.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB2)
+    ds2.eqsys.n_re.transport.prescribeDiffusion(drr=Drr2)
     ds2.timestep.setTmax(3e-2 - t_sim)
     ds2.timestep.setDt(dtmax)
     ds2.timestep.setType(TimeStepper.TYPE_CONSTANT)

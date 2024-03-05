@@ -7,12 +7,11 @@ from utils import calculate_t_CQ
 import sys
 import subprocess
 import os
+import shutil
 
 def save_simulation_data(simulation, I_RE, I_Ohm, I_tot, t, tau_CQ):
     """
     Saves the results of a DREAM simulation to a set of text files, organizing them within a uniquely named directory based on the simulation parameters.
-
-    This function creates a directory structure that first categorizes the data by the discharge value of the simulation, and then further organizes it into subdirectories named according to the specific dBB and assimilation values used in the simulation. Each subdirectory contains text files for the runaway electron currents (I_RE), ohmic currents (I_Ohm), total currents (I_tot), time points (t), and the calculated current quench time (tau_CQ).
 
     Parameters:
     - simulation (object): An object containing attributes of the simulation, including dBB, assimilation, and discharge values.
@@ -21,8 +20,6 @@ def save_simulation_data(simulation, I_RE, I_Ohm, I_tot, t, tau_CQ):
     - I_tot (numpy.ndarray): 1D array of total currents (sum of I_RE and I_Ohm) throughout the simulation.
     - t (numpy.ndarray): 1D array of time points corresponding to the current measurements.
     - tau_CQ (float): The calculated current quench time.
-
-    The function dynamically constructs the path to the target directory based on the simulation's discharge attribute and the dBB and assimilation values. It ensures this target directory exists by creating it if necessary. Each parameter array is saved to a separate text file, with the scalar tau_CQ value saved to its own file.
 
     Example file structure for a simulation with discharge '12345', dBB '0.001', and assimilation '50':
     ../JETresults/parameter_scans/12345/dBB_0.001_assim_50/I_RE.txt
@@ -38,7 +35,15 @@ def save_simulation_data(simulation, I_RE, I_Ohm, I_tot, t, tau_CQ):
     # Ensure the target directory exists
     os.makedirs(target_dir, exist_ok=True)
     
-    # Save arrays to text files within the specific target directory
+    # Path to the simulation_settings.log file in the current directory
+    log_file_path = 'simulation_settings.log'
+    # New path for the simulation_settings.log file in the target directory
+    new_log_file_path = os.path.join(target_dir, 'simulation_settings.log')
+
+    # Move the simulation_settings.log file
+    shutil.move(log_file_path, new_log_file_path)
+
+   # Save arrays to text files within the specific target directory
     np.savetxt(os.path.join(target_dir, 'I_RE.txt'), I_RE, header='I_RE', fmt='%f')
     np.savetxt(os.path.join(target_dir, 'I_Ohm.txt'), I_Ohm, header='I_Ohm', fmt='%f')
     np.savetxt(os.path.join(target_dir, 'I_tot.txt'), I_tot, header='I_tot', fmt='%f')
@@ -86,14 +91,10 @@ def run_DREAM_simulation(argv, dBB, assimilation):
     """
     Executes a DREAM simulation with specified parameters for magnetic perturbation (dBB) and assimilation rate, then processes and saves the simulation results.
 
-    This function initializes a simulation instance with given dBB and assimilation parameters, retrieves the appropriate settings based on command-line arguments (argv), and runs the disruption simulation. After the simulation, it extracts relevant data including the final runaway electron (RE) current, current quench time (tau_CQ), RE current over time, Ohmic current over time, total current over time, and the corresponding time array. These data are then saved to a structured file, and a cleanup script is executed to prepare for subsequent simulations.
-
     Parameters:
     - argv: Command-line arguments passed to the DREAM simulation, used for configuring the simulation environment.
     - dBB (float): The magnetic perturbation parameter, representing the normalized change in magnetic field strength.
     - assimilation (float): The assimilation rate, indicating the percentage of injected materials that enter the tokamak plasma.
-
-    The results of the simulation, including the final RE current and the time of the current quench, are returned for further analysis or logging.
 
     Returns:
     - I_RE_final (float): The final runaway electron current from the simulation.
@@ -128,13 +129,13 @@ def perform_parameter_scan(argv, dBB_range, assimilation_range):
     - A meshgrid of dBB and assimilation values, and the matrix of RE current results.
     """
 
-    dBB_values = np.linspace(dBB_range[0], dBB_range[1], 10)  # Define dBB values range
-    assimilation_values = np.linspace(assimilation_range[0], assimilation_range[1], 50) * 1e-2  # Define assimilation values range
+    dBB_values = np.logspace(dBB_range[0], dBB_range[1], 10)  # Define dBB values range
+    assimilation_values = np.logspace(assimilation_range[0], assimilation_range[1], 20)  # Define assimilation values range
     RE_current_results = np.zeros((len(dBB_values), len(assimilation_values)))  # Initialize results matrix
     tau_CQ_results = RE_current_results
   
     # To deal with a scan that crashes midway
-    crash = True
+    crash = False
     if crash:
         start_i = 3
         special_start_j_for_i_2 = 22
@@ -179,8 +180,8 @@ def plot_contour(dBB_values, assimilation_values, RE_current_results):
 
 def main(argv):
     # Define the ranges for dBB and assimilation
-    dBB_range = (5e-4, 1e-2)  # From 5e-4 to 1e-2
-    assimilation_range = (1, 100) # From 1% to 100%
+    dBB_range = (-5, -2)  # From 5e-4 to 1e-2
+    assimilation_range = (-2, 0) # From 1% to 100%
 
     # Perform the parameter scan
     dBB_values, assimilation_values, RE_current_results, tau_CQ_results = perform_parameter_scan(argv, dBB_range, assimilation_range)
