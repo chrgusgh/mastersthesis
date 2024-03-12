@@ -68,14 +68,14 @@ def get_settings(argv, simulation):
 def run_disruption_simulation(args, settings, simulation):
     ds = generate_baseline(equilibrium=None if args.cylindrical else f'../JETdata/{simulation.mag_eq_fn}', simulation=simulation, runInit=(args.runfrom <= 0), verboseInit=(0 in args.verbose), **settings)
 
-    do_TQ, _, do_CQ, _ = simulate(ds1=ds, Drr = simulation.Drr, Drr2 = simulation.Drr2, dBB0 = simulation.dBB_cold, **settings)
+    do_TQ, _, do_CQ, _ = simulate(ds1=ds, simulation=simulation, **settings)
 
     return do_TQ, do_CQ
 
 
 def main(argv):
     # TODO: streamline this.
-    simulation = TokamakSimulation(dBB_cold=2e-3, assimilation=0.02)
+    simulation = TokamakSimulation(dBB_cold=2e-3, assimilation=0.2)
     args, settings = get_settings(argv, simulation)
 
     if args.scan == SCAN_NONE:

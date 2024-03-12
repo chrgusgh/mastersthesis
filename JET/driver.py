@@ -228,10 +228,7 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
     # of the initial Maxwellian on the hot grid. This temperature
     # is that of the cold population in the TQ simulation.
     #ds.eqsys.T_cold.setPrescribedData(T0, radius=T0r)
-    if mode == MODE_FLUID or mode == MODE_KINETIC:
-        ds.eqsys.T_cold.setPrescribedData(temperature=T0, radius=T0r)
-    else:
-        ds.eqsys.T_cold.setPrescribedData(temperature=1)
+    ds.eqsys.T_cold.setPrescribedData(temperature=T0, radius=T0r)
 
     # Set main ion density
     #if not np.isscalar(T0r):
@@ -241,10 +238,10 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
     
     ds.eqsys.n_i.addIon(name='D', Z=1, Z0=1, iontype=Ions.IONS_DYNAMIC, T=T0, r=T0r, n=n0(T0r))
 
-    ds.timestep.setTmax(tMax)
-    ds.timestep.setNt(nt)
+    ds.timestep.setTmax(1e-11)
+    ds.timestep.setNt(1)
 
-    ds.other.include('fluid', 'scalar')
+    ds.other.include('fluid', 'scalar', 'hottail/nu_D_f1', 'hottail/nu_D_f2')
 
     do = runiface(ds, 'output.h5', quiet=False)
 
@@ -351,6 +348,7 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
             ds.eqsys.n_re.setAvalanche(RunawayElectrons.AVALANCHE_MODE_FLUID_HESSLOW)
             ds.collisions.collfreq_mode = Collisions.COLLFREQ_MODE_SUPERTHERMAL
             ds.eqsys.T_cold.setInitialProfile(temperature=1)
+            ignorelist = ['n_i', 'N_i', 'W_i', 'T_cold', 'W_cold', 'n_hot', 'n_cold'] 
         else:
             ds.eqsys.n_re.setAvalanche(RunawayElectrons.AVALANCHE_MODE_KINETIC, pCutAvalanche=0.01)
             ds.collisions.collfreq_mode = Collisions.COLLFREQ_MODE_FULL
@@ -369,7 +367,7 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
     ds.eqsys.T_cold.setType(Temperature.TYPE_SELFCONSISTENT)
     if mode == MODE_KINETIC:
         ds.eqsys.E_field.setInitialProfile(Einit, radius=Einit_r)
-    else:
+    elif mode == MODE_FLUID:
         ds.eqsys.j_ohm.setInitialProfile(j0(j0r), radius=j0r, Ip0=Ip0)
 
     if tauwall is None:
@@ -412,6 +410,7 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
         ds.solver.tolerance.set(unknown='n_hot', reltol=reltol, abstol=MAXIMUM_IGNORABLE_ELECTRON_DENSITY)
         ds.solver.tolerance.set(unknown='j_hot', reltol=reltol, abstol=e*c*MAXIMUM_IGNORABLE_ELECTRON_DENSITY)
 
+        ds.fromOutput('output.h5', ignore=ignorelist)
     ds.output.setTiming(True, True)
     
     if mode == MODE_KINETIC:
@@ -420,8 +419,7 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
     return ds
 
 
-def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, Drr2 = 0, dBB0=1e-3,
-    nre0=None, nre0_r=0,
+def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, simulation=None, nre0=None, nre0_r=0,
     verboseIoniz=False, runIoniz=True, verboseTQ=False, runTQ=True,
     prefix='output/generic', extension='', **kwargs):
     """
@@ -433,7 +431,7 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, Drr2 = 0, dBB0=1e-
     outname = lambda phase : longoutname(mode=mode, phase=phase, prefix=prefix, extension=extension)
 
     Ti0 = 1
-    print(f'In simulate: {Drr}, {dBB0}')
+    #print(f'In simulate: {Drr}, {dBB0}')
     ##########################################
     # 1. Ionization phase of TQ (~1 µs)
     ##########################################
@@ -442,22 +440,33 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, Drr2 = 0, dBB0=1e-
         #print('i[n]:', i['n'])
         ds1.eqsys.n_i.addIon(i['name'], Z=i['Z'], iontype=Ions.IONS_DYNAMIC_NEUTRAL, n=i['n'], T=Ti0)
 
-    #dBB_vec = np.linspace(1e-2, 4e-4, 1000)
-    #tDrr = np.linspace(0, t_TQ, 1000)
-
-    #Drr_vec = utils.calculate_Drr(R0, q, dBB_vec)
+   # dBB_vec = np.linspace(dBB0, 4e-4, 1000)
+    t = np.array([0, 50e-6, 50.001e-6, 1])
+    #t = np.linspace(0, t_sim, 1000)
+    dBB0_vec = np.array([simulation.dBB_cold, simulation.dBB_cold, 4e-4, 4e-4])
+    Drr_vec = np.array([simulation.Drr, simulation.Drr, 0, 0])
+    
+    dBB0_stack = np.column_stack((dBB0_vec, dBB0_vec))
+    Drr_stack = np.column_stack((Drr_vec, Drr_vec))
+    
+    r = np.linspace(0, simulation.a, 2)
+    
+    #dBB0_stack = np.column_stack((simulation.dBB_cold, simulation.dBB_cold))
+    #Drr_stack = np.column_stack((simulation.Drr, simulation.Drr))
+   # Drr_vec = utils.calculate_Drr(R0, q, dBB_vec)
+    
     # Prescribe heat diffusion?
    # if Drr > 0:
     ds1.eqsys.n_re.transport.setBoundaryCondition(Transport.BC_F_0)
-    ds1.eqsys.n_re.transport.prescribeDiffusion(drr=Drr)
+    ds1.eqsys.n_re.transport.prescribeDiffusion(drr=Drr_stack, r=r, t=t)
         #pass
         #ds1.eqsys.T_cold.transport.prescribeDiffusion(drr=Drr)
 
     ds1.eqsys.T_cold.transport.setBoundaryCondition(Transport.BC_F_0)
-    ds1.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB0)
+    ds1.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB0_stack, r=r, t=t)
     
     ds1.eqsys.f_hot.transport.setBoundaryCondition(Transport.BC_F_0)
-    ds1.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB0)
+    ds1.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB0_stack, r=r, t=t)
     #ds1.timestep.setTmax(t_ioniz)
     #ds1.timestep.setNt(nt_ioniz)
 
@@ -480,11 +489,10 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, Drr=0, Drr2 = 0, dBB0=1e-
 
 
     ds2 = DREAMSettings(ds1)
-    dBB2 = 4e-4 # Remnant heat transport after TQ
-
-    ds2.eqsys.T_cold.transport.setMagneticPerturbation(dBB=dBB2)
-    ds2.eqsys.f_hot.transport.setMagneticPerturbation(dBB=dBB2)
-    ds2.eqsys.n_re.transport.prescribeDiffusion(drr=Drr2)
+    
+    ds2.eqsys.T_cold.transport.setMagneticPerturbation(dBB=simulation.dBB2)
+    ds2.eqsys.f_hot.transport.setMagneticPerturbation(dBB=simulation.dBB2)
+    ds2.eqsys.n_re.transport.prescribeDiffusion(drr=simulation.Drr2)
     ds2.timestep.setTmax(3e-2 - t_sim)
     ds2.timestep.setDt(dtmax)
     ds2.timestep.setType(TimeStepper.TYPE_CONSTANT)
