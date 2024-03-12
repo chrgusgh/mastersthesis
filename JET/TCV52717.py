@@ -53,7 +53,7 @@ def get_settings(argv, simulation):
         #'t_ioniz':  1e-6,
         #'nt_ioniz': 8000,
         #'t_sim': 1e-2,
-        't_sim': simulation.tau_TQ,
+        't_sim': simulation.t_TQ,
         'dt0': simulation.dt0,
         'dtmax': simulation.dtmax,
         'runIoniz': args.runfrom <= 1,
@@ -75,7 +75,7 @@ def run_disruption_simulation(args, settings, simulation):
 
 def main(argv):
     # TODO: streamline this.
-    simulation = TokamakSimulation(dBB_cold=2e-3, assimilation=0.2)
+    simulation = TokamakSimulation(dBB_cold=2e-3, assimilation=0.2, t_TQ=1e-4)
     args, settings = get_settings(argv, simulation)
 
     if args.scan == SCAN_NONE:
@@ -83,7 +83,6 @@ def main(argv):
         do_TQ, do_CQ = run_disruption_simulation(args, settings, simulation)
         #disruption_summary(do_TQ)
     else:
-        print("If this statement is reached, the world has come to an end!")
         doscan(args.scan, args, settings, run_disruption_simulation)
 
     return 0

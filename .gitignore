@@ -11,3 +11,6 @@ remnants/
 JET/.plot_ps_data.py.swp
 JET/.utils.py.swp
 JET/simulation_settings.log
+JET/move_outputs_old.sh
+JET/save_output.sh
+

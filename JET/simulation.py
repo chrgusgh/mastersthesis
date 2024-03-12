@@ -57,7 +57,7 @@ class TokamakSimulation:
         self.plasma_volume = 76.55510067624934  # m^3
         self.Ti = 300  # Assumption for impurities, in Kelvin
         self.process_profiles()
-        self.Ip0 = -np.abs(self.p0['Ip_A'][:])
+        self.Ip0 = np.abs(self.p0['Ip_A'][:])
         self.q = 1
         self.m_e_eV = const.m_e / const.e
         self.T_i = np.median(self.T0[0])
@@ -84,7 +84,7 @@ class TokamakSimulation:
         self.Ar = self.p0['Ar_Pam3'][:] * self.assimilation
         self.n_D2 = utils.impurity_density(self.D2, self.Ti, self.plasma_volume)
         self.n_Ar = utils.impurity_density(self.Ar, self.Ti, self.plasma_volume)
-        self.j_par_at_Bmin = -np.abs(self.eqdsk.get_Jpar_at_Bmin(self.psi_n))
+        self.j_par_at_Bmin = np.abs(self.eqdsk.get_Jpar_at_Bmin(self.psi_n))
         self.r = self.eqdsk.get_r(self.psi_n) #OBS inte modifierad.
         self.tau_TQ = utils.calculate_tau_TQ(self.t_TQ, self.T_i, self.T_f)
         self.v_th = utils.calculate_v_th(self.T_f, self.m_e_eV)

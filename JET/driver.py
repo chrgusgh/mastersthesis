@@ -420,7 +420,7 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
 
 
 def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, simulation=None, nre0=None, nre0_r=0,
-    verboseIoniz=False, runIoniz=True, verboseTQ=False, runTQ=True,
+    verboseIoniz=True, runIoniz=True, verboseTQ=False, runTQ=True,
     prefix='output/generic', extension='', **kwargs):
     """
     Run the disruption simulation (given a baseline simulation).
@@ -441,9 +441,9 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, simulation=None, nre0=Non
         ds1.eqsys.n_i.addIon(i['name'], Z=i['Z'], iontype=Ions.IONS_DYNAMIC_NEUTRAL, n=i['n'], T=Ti0)
 
    # dBB_vec = np.linspace(dBB0, 4e-4, 1000)
-    t = np.array([0, 50e-6, 50.001e-6, 1])
+    t = np.array([0, simulation.t_TQ, simulation.t_TQ + 1e-9, 1])
     #t = np.linspace(0, t_sim, 1000)
-    dBB0_vec = np.array([simulation.dBB_cold, simulation.dBB_cold, 4e-4, 4e-4])
+    dBB0_vec = np.array([simulation.dBB_cold, simulation.dBB_cold, simulation.dBB2, simulation.dBB2])
     Drr_vec = np.array([simulation.Drr, simulation.Drr, 0, 0])
     
     dBB0_stack = np.column_stack((dBB0_vec, dBB0_vec))
@@ -492,7 +492,7 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, simulation=None, nre0=Non
     
     ds2.eqsys.T_cold.transport.setMagneticPerturbation(dBB=simulation.dBB2)
     ds2.eqsys.f_hot.transport.setMagneticPerturbation(dBB=simulation.dBB2)
-    ds2.eqsys.n_re.transport.prescribeDiffusion(drr=simulation.Drr2)
+    ds2.eqsys.n_re.transport.prescribeDiffusion(drr=0)
     ds2.timestep.setTmax(3e-2 - t_sim)
     ds2.timestep.setDt(dtmax)
     ds2.timestep.setType(TimeStepper.TYPE_CONSTANT)
