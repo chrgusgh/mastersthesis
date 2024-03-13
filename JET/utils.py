@@ -100,8 +100,8 @@ def calculate_t_CQ(I_Ohm, Ip0, t):
     - t_CQ: Current quench time in seconds.
     """
     I_Ohm_init = I_Ohm[0]
-    lb = 0.75 * I_Ohm_init
-    ub = 0.85 * I_Ohm_init
+    lb = 0.77 * I_Ohm_init
+    ub = 0.83 * I_Ohm_init
     indices = np.where((I_Ohm >= lb) & (I_Ohm <= ub))[0]
     I_Ohm_80_idx = indices[0]
     t_80 = t[I_Ohm_80_idx]
