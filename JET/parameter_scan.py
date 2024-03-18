@@ -28,13 +28,13 @@ def save_simulation_data(simulation, I_RE, I_Ohm, I_hot, I_tot, t, tau_CQ):
     """
     # Format filename prefix with dBB and assimilation values
     filename_prefix = f"dBB_{simulation.dBB_cold}_assim_{simulation.assimilation}"
-    
+
     # Define the target directory based on discharge and filename_prefix
     target_dir = f"../JETresults/parameter_scans/{simulation.discharge}/{filename_prefix}"
-    
+
     # Ensure the target directory exists
     os.makedirs(target_dir, exist_ok=True)
-    
+
     # Path to the simulation_settings.log file in the current directory
     log_file_path = 'simulation_settings.log'
     # New path for the simulation_settings.log file in the target directory
@@ -79,9 +79,9 @@ def get_data(do_TQ, do_CQ, simulation):
     t_TQ = do_TQ.grid.t[:]
     t_CQ = do_CQ.grid.t[1:] + t_TQ[-1]
     t = np.append(t_TQ, t_CQ)
-    
+
     tau_CQ = calculate_t_CQ(I_Ohm, simulation.Ip0, t)
-    
+
     return I_RE[-1], tau_CQ, I_RE, I_Ohm, I_hot, I_tot, t
 
 #def save_simulation_data(simulation):
@@ -104,20 +104,18 @@ def run_DREAM_simulation(argv, dBB, assimilation, t_TQ):
     Returns:
     - I_RE_final (float): The final runaway electron current from the simulation.
     - tau_CQ (float): The calculated current quench duration.
-    
+
     """
     simulation = TokamakSimulation(dBB_cold=dBB, assimilation=assimilation, t_TQ=t_TQ)
-    
+
     args, settings = get_settings(argv, simulation)
-    
+
     do_TQ, do_CQ = run_disruption_simulation(args, settings, simulation)
-    
-    time.sleep(1)
-    
+
     I_RE_final, tau_CQ, I_RE, I_Ohm, I_hot, I_tot, t = get_data(do_TQ, do_CQ, simulation)
-    
+
     save_simulation_data(simulation, I_RE, I_Ohm, I_hot, I_tot, t, tau_CQ)
-    
+
     subprocess.run(['./cleanup.sh'])
 
     return I_RE_final, tau_CQ
@@ -125,7 +123,7 @@ def run_DREAM_simulation(argv, dBB, assimilation, t_TQ):
 def perform_parameter_scan(argv, dBB_values, assimilation_values, t_TQ, resume_i=0, resume_j=0):
     """
     Performs a parameter scan over specified ranges of dBB and assimilation values, with an option to resume from a specific point.
-    
+
     Args:
     - argv: Command line arguments for further configuration.
     - dBB_values: List of dBB values to be scanned.
@@ -133,7 +131,7 @@ def perform_parameter_scan(argv, dBB_values, assimilation_values, t_TQ, resume_i
     - t_TQ: Thermal quench time, affecting the simulation.
     - resume_i: Index of dBB_values from which to resume the scan.
     - resume_j: Index of assimilation_values from which to resume the scan.
-    
+
     Returns:
     - A tuple containing:
         - Array of dBB values.
@@ -146,11 +144,22 @@ def perform_parameter_scan(argv, dBB_values, assimilation_values, t_TQ, resume_i
     RE_current_results = np.zeros((len(dBB_values), len(assimilation_values)))
     tau_CQ_results = np.zeros_like(RE_current_results)
 
-    for i, dBB in enumerate(dBB_values[resume_i:], start=resume_i):
-        # Adjust start index for j based on i
-        start_j = resume_j if i == resume_i else 0
+    # Assuming dBB_values and assimilation_values are defined
 
-        for j, assimilation in enumerate(assimilation_values[start_j:], start=start_j):
+    # Start the parameter scan
+    for i, dBB in enumerate(dBB_values):
+    # Skip i indices before the resume point
+        if i < resume_i:
+            continue
+
+        for j, assimilation in enumerate(assimilation_values):
+            # If we're at the resume_i, skip j indices before the resume point
+            if i == resume_i and j < resume_j:
+                continue
+
+            # Now run your simulation or process
+            print(f"Processing i={i}, j={j} with dBB={dBB}, assimilation={assimilation}")
+            time.sleep(1)
             # Run the simulation with the current parameters
             I_RE_final, tau_CQ = run_DREAM_simulation(argv, dBB, assimilation, t_TQ)
             RE_current_results[i, j] = I_RE_final
@@ -182,9 +191,9 @@ def main(argv):
     dBB_range = (-4, -2)  # From 1e-4 to 1e-2
     assimilation_range = (-2, 0) # From 1% to 100%
     dBB_values = np.logspace(dBB_range[0], dBB_range[1], 10)  # Define dBB values range
-    assimilation_values = np.logspace(assimilation_range[0], assimilation_range[1], 20)  # Define assimilation values range
+    assimilation_values = np.logspace(assimilation_range[0], assimilation_range[1], 10)  # Define assimilation values range
     #TODO: Streamline t_TQ?
-    t_TQ = 1e-4
+    t_TQ = 0.25e-4
 
     # Perform the parameter scan
     dBB_values, assimilation_values, RE_current_results, tau_CQ_results = perform_parameter_scan(argv, dBB_values, assimilation_values, t_TQ)

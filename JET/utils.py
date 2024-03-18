@@ -89,22 +89,32 @@ def calculate_tau_TQ(t_TQ, T_init, T_final):
 
 def calculate_t_CQ(I_Ohm, Ip0, t):
     """
-    Calculates the current quench time from The formula.
+    Calculates the current quench time from the formula.
 
     Parameters:
     - I_Ohm: Ohmic current array
-    - I_p: Plasma current
-    - t: Time array for current quench phase
+    - Ip0: Initial plasma current
+    - t: Time array for the current quench phase
 
     Returns:
-    - t_CQ: Current quench time in seconds.
+    - t_CQ: Current quench time in seconds. If calculation fails, returns 0.
     """
-    I_Ohm_init = I_Ohm[0]
-    lb = 0.77 * I_Ohm_init
-    ub = 0.83 * I_Ohm_init
-    indices = np.where((I_Ohm >= lb) & (I_Ohm <= ub))[0]
-    I_Ohm_80_idx = indices[0]
-    t_80 = t[I_Ohm_80_idx]
-    t_last = t[-1]
-    # note minus sign in front
-    return -(t_80 - t_last) / (0.8 - I_Ohm[-1] / Ip0)
+    try:
+        I_Ohm_init = I_Ohm[0]
+        lb = 0.799 * I_Ohm_init
+        ub = 0.801 * I_Ohm_init
+        indices = np.where((I_Ohm >= lb) & (I_Ohm <= ub))[0]
+        if indices.size == 0:
+            raise IndexError("No valid index found.")
+        I_Ohm_80_idx = indices[0]
+        t_80 = t[I_Ohm_80_idx]
+        t_last = t[-1]
+        # Note minus sign in front
+        return -(t_80 - t_last) / (0.8 - I_Ohm[-1] / Ip0)
+    except IndexError as e:
+        print(f"Error calculating t_CQ: {e}")
+        return 0
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return 0
+
