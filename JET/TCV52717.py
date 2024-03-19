@@ -75,7 +75,7 @@ def run_disruption_simulation(args, settings, simulation):
 
 def main(argv):
     # TODO: streamline this.
-    simulation = TokamakSimulation(SHOT=5, dBB_cold=1e-3, assimilation=0.2, t_TQ=1e-4)
+    simulation = TokamakSimulation(SHOT=2, dBB_cold=1e-3, assimilation=0.2, t_TQ=1e-4)
     args, settings = get_settings(argv, simulation)
 
     if args.scan == SCAN_NONE:
