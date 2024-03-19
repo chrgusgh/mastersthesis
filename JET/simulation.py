@@ -63,22 +63,22 @@ class TokamakSimulation:
         self.T_i = np.median(self.T0[0])
         self.T_f = 100  # Final temperature in eV
         # TODO: streamline this to accomodate for fluid 1e-9 and isotropic 1e-11.
-        self.dt0 = 1e-15
+        self.dt0 = 1e-14
         self.dtmax =1e-4
 
     def process_profiles(self):
         """Processes radial profiles for electron density and temperature."""
         self.n0r = self.p0['R_Ne_profile_LIDAR_m'][21:-8] - self.R0
         self.n0r_pos = np.where(self.n0r >= 0)
-        #self.T0r = -(self.p0['R_Te_profile_ECE_m'][:35] - self.R0)
-        self.T0r = self.p0['R_Te_profile_LIDAR_m'][22:-8] - self.R0
+        self.T0r = (self.p0['R_Te_profile_ECE_m'][31:-9] - self.R0)
+        #self.T0r = self.p0['R_Te_profile_LIDAR_m'][22:-8] - self.R0
         self.T0r_pos = np.where(self.T0r >= 0)
         # Use filtered data
         self.n0r = self.n0r[self.n0r_pos]
         self.T0r = self.T0r[self.T0r_pos]
         self.n0 = self.p0['Ne_profile_LIDAR_mm3'][21:-8][self.n0r_pos]
-        #self.T0 = self.p0['Te_profile_ECE_eV'][:35][self.T0r_pos]
-        self.T0 = self.p0['Te_profile_LIDAR_eV'][22:-8]
+        self.T0 = self.p0['Te_profile_ECE_eV'][31:-9][self.T0r_pos]
+        #self.T0 = self.p0['Te_profile_LIDAR_eV'][22:-8]
 
     def update_dependent_parameters(self):
         """Updates simulation parameters that depend on the initial settings."""
