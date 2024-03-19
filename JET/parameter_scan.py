@@ -92,7 +92,7 @@ def get_data(do_TQ, do_CQ, simulation):
 #    subprocess.run(['./save_parameter_scan_data.sh', simulation.discharge, simulation.dBB_cold, simulation.assim], check=True)
 
 
-def run_DREAM_simulation(argv, dBB, assimilation, t_TQ):
+def run_DREAM_simulation(argv, SHOT, dBB, assimilation, t_TQ):
     """
     Executes a DREAM simulation with specified parameters for magnetic perturbation (dBB) and assimilation rate, then processes and saves the simulation results.
 
@@ -106,7 +106,7 @@ def run_DREAM_simulation(argv, dBB, assimilation, t_TQ):
     - tau_CQ (float): The calculated current quench duration.
 
     """
-    simulation = TokamakSimulation(dBB_cold=dBB, assimilation=assimilation, t_TQ=t_TQ)
+    simulation = TokamakSimulation(SHOT=SHOT, dBB_cold=dBB, assimilation=assimilation, t_TQ=t_TQ)
 
     args, settings = get_settings(argv, simulation)
 
@@ -120,7 +120,7 @@ def run_DREAM_simulation(argv, dBB, assimilation, t_TQ):
 
     return I_RE_final, tau_CQ
 
-def perform_parameter_scan(argv, dBB_values, assimilation_values, t_TQ, resume_i=0, resume_j=0):
+def perform_parameter_scan(argv, SHOT, dBB_values, assimilation_values, t_TQ):
     """
     Performs a parameter scan over specified ranges of dBB and assimilation values, with an option to resume from a specific point.
 
@@ -139,6 +139,10 @@ def perform_parameter_scan(argv, dBB_values, assimilation_values, t_TQ, resume_i
         - Matrix of final RE current results.
         - Matrix of current quench times.
     """
+    
+    # Where to start in the simulation
+    resume_i = 0
+    resume_j = 8
 
     # Initialize results matrices
     RE_current_results = np.zeros((len(dBB_values), len(assimilation_values)))
@@ -161,7 +165,7 @@ def perform_parameter_scan(argv, dBB_values, assimilation_values, t_TQ, resume_i
             print(f"Processing i={i}, j={j} with dBB={dBB}, assimilation={assimilation}")
             time.sleep(1)
             # Run the simulation with the current parameters
-            I_RE_final, tau_CQ = run_DREAM_simulation(argv, dBB, assimilation, t_TQ)
+            I_RE_final, tau_CQ = run_DREAM_simulation(argv, SHOT, dBB, assimilation, t_TQ)
             RE_current_results[i, j] = I_RE_final
             tau_CQ_results[i, j] = tau_CQ
 
@@ -187,16 +191,19 @@ def plot_contour(dBB_values, assimilation_values, RE_current_results):
     plt.show()
 
 def main(argv):
+    
+    # 0 - 5.
+    SHOT = 5
     # Define the ranges for dBB and assimilation
-    dBB_range = (-4, -2)  # From 1e-4 to 1e-2
-    assimilation_range = (-2, 0) # From 1% to 100%
-    dBB_values = np.logspace(dBB_range[0], dBB_range[1], 10)  # Define dBB values range
-    assimilation_values = np.logspace(assimilation_range[0], assimilation_range[1], 10)  # Define assimilation values range
+    dBB_range = (1e-4, 1e-2)  # From 1e-4 to 1e-2
+    assimilation_range = (1e-2, 1) # From 1% to 100%
+    dBB_values = np.linspace(dBB_range[0], dBB_range[1], 10)  # Define dBB values range
+    assimilation_values = np.linspace(assimilation_range[0], assimilation_range[1], 10)  # Define assimilation values range
     #TODO: Streamline t_TQ?
-    t_TQ = 0.25e-4
-
+    t_TQ = 1e-4
+    
     # Perform the parameter scan
-    dBB_values, assimilation_values, RE_current_results, tau_CQ_results = perform_parameter_scan(argv, dBB_values, assimilation_values, t_TQ)
+    dBB_values, assimilation_values, RE_current_results, tau_CQ_results = perform_parameter_scan(argv,SHOT, dBB_values, assimilation_values, t_TQ)
 
     #np.savetxt('I_RE_final.txt', RE_current_results, fmt='%f')
     #np.savetxt('tau_CQ.txt', tau_CQ_results, fmt='%f')

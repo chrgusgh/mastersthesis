@@ -63,7 +63,7 @@ class TokamakSimulation:
         self.T_i = np.median(self.T0[0])
         self.T_f = 100  # Final temperature in eV
         # TODO: streamline this to accomodate for fluid 1e-9 and isotropic 1e-11.
-        self.dt0 = 1e-12
+        self.dt0 = 1e-15
         self.dtmax =1e-4
 
     def process_profiles(self):
