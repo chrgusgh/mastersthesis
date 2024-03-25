@@ -204,7 +204,7 @@ def generate_baseline(mode=MODE_ISOTROPIC, equilibrium=None, simulation=None, nt
         ds.radialgrid.setMinorRadius(a)
         ds.radialgrid.setB0(B0)
 
-    ds.radialgrid.setWallRadius(1.1*a) # An assumption
+    ds.radialgrid.setWallRadius(1.5*a) # An assumption
     ds.radialgrid.setNr(nr)
 
     ds.eqsys.E_field.setType(ElectricField.TYPE_PRESCRIBED_OHMIC_CURRENT)

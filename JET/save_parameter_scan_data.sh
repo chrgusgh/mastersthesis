@@ -2,11 +2,11 @@
 
 # Read command-line arguments
 shot_number=$1
-dBB=$2
-assimilation=$3
+Arfrac=$2
+B_factor=$3
 
-# Create folder name
-folder_name="dBB_${dBB}_assim_${assimilation}"
+# Correctly create folder name using B_factor and Arfrac
+folder_name="B_factor_${B_factor}_Arfrac_${Arfrac}"
 
 # Create new folder
 mkdir "$folder_name"
@@ -18,7 +18,7 @@ mv __pycache__ "$folder_name/"
 mv simulation_settings.log "$folder_name/"
 
 # Ensure the target directory exists
-target_dir="../JETresults/parameter_scans/${shot_number}"
+target_dir="../../../../../mnt/DISK4/christiang/resultat/parameter_scans/${shot_number}"
 mkdir -p "$target_dir"
 
 # Move the newly created folder to the desired location within the shot number directory

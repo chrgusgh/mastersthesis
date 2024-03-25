@@ -174,22 +174,6 @@ def perform_parameter_scan(argv, SHOT, dBB_values, assimilation_values, t_TQ):
 
     return dBB_values, assimilation_values, RE_current_results, tau_CQ_results
 
-def plot_contour(dBB_values, assimilation_values, RE_current_results):
-    """
-    Plots a 2D contour of the final RE current as a function of dBB and assimilation.
-    """
-
-    X, Y = np.meshgrid(assimilation_values, dBB_values)
-    Z = RE_current_results
-    plt.figure(figsize=(10, 6))
-    contour_plot = plt.contourf(X, Y, Z, levels=np.linspace(Z.min(), Z.max(), 20), cmap='plasma')
-    colorbar = plt.colorbar(contour_plot)
-    colorbar.set_label('$I_{RE}$ (MA)') 
-    plt.title('Final RE Current as a Function of $\\delta B / B$ and Assimilation')
-    plt.xlabel('Assimilation (%)')
-    plt.ylabel('$\\delta B / B$')
-    plt.show()
-
 def main(argv):
     
     # 0 - 5.

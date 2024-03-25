@@ -7,7 +7,7 @@ import utils as utils
 from EQDSK import EQDSK
 
 class TokamakSimulation:
-    def __init__(self, SHOT=1, dBB_cold=1e-3, assimilation=0.2, t_TQ=1e-4):
+    def __init__(self, SHOT=1, dBB_cold=2e-3, assimilation=0.2, t_TQ=1e-4, Arfrac=None, mag_eq_fn=None, B_factor=None):
         """
         Initializes the TokamakSimulation class with specific simulation parameters.
 
@@ -22,6 +22,9 @@ class TokamakSimulation:
         self.dBB_cold = dBB_cold
         self.assimilation = assimilation
         self.t_TQ = t_TQ
+        self.mag_eq_fn = mag_eq_fn
+        self.Arfrac = Arfrac
+        self.B_factor = B_factor
 
         # Load shot data and equilibrium configuration
         self.fp = '../JETdata/DDB_Runaways_ArBt_scan.h5'
@@ -42,7 +45,10 @@ class TokamakSimulation:
         self.f = h5py.File(self.fp, 'r')
         self.discharge = self.pulses[self.SHOT]
         self.p0 = self.f[self.discharge]
-        self.mag_eq_fn = f'mag_eq_{self.discharge}_data.h5'
+        
+        if self.mag_eq_fn is None:
+            self.mag_eq_fn = f'mag_eq_{self.discharge}_data.h5'
+        
         self.eqdsk = EQDSK(f'../JETdata/g_JET_ehtr_{self.discharge}_t62.3990_62.4010', override_psilim=2e-3)
         self.equil = h5py.File(f'../JETdata/{self.mag_eq_fn}', 'r')['equil']
 
@@ -63,27 +69,33 @@ class TokamakSimulation:
         self.T_i = np.median(self.T0[0])
         self.T_f = 100  # Final temperature in eV
         # TODO: streamline this to accomodate for fluid 1e-9 and isotropic 1e-11.
-        self.dt0 = 1e-14
+        self.dt0 = 1e-12
         self.dtmax =1e-4
 
     def process_profiles(self):
         """Processes radial profiles for electron density and temperature."""
-        self.n0r = self.p0['R_Ne_profile_LIDAR_m'][21:-8] - self.R0
+        self.n0r = self.p0['R_Ne_profile_LIDAR_m'][21:-9] - self.R0
         self.n0r_pos = np.where(self.n0r >= 0)
-        self.T0r = (self.p0['R_Te_profile_ECE_m'][31:-9] - self.R0)
-        #self.T0r = self.p0['R_Te_profile_LIDAR_m'][22:-8] - self.R0
+        #self.T0r = (self.p0['R_Te_profile_ECE_m'][31:-9] - self.R0)
+        self.T0r = self.p0['R_Te_profile_LIDAR_m'][22:-8] - self.R0
         self.T0r_pos = np.where(self.T0r >= 0)
         # Use filtered data
         self.n0r = self.n0r[self.n0r_pos]
         self.T0r = self.T0r[self.T0r_pos]
-        self.n0 = self.p0['Ne_profile_LIDAR_mm3'][21:-8][self.n0r_pos]
-        self.T0 = self.p0['Te_profile_ECE_eV'][31:-9][self.T0r_pos]
-        #self.T0 = self.p0['Te_profile_LIDAR_eV'][22:-8]
+        self.n0 = self.p0['Ne_profile_LIDAR_mm3'][21:-9][self.n0r_pos]
+        #self.T0 = self.p0['Te_profile_ECE_eV'][31:-9][self.T0r_pos]
+        self.T0 = self.p0['Te_profile_LIDAR_eV'][22:-8]
 
     def update_dependent_parameters(self):
         """Updates simulation parameters that depend on the initial settings."""
         self.D2 = self.p0['D2_Pam3'][:] * self.assimilation
         self.Ar = self.p0['Ar_Pam3'][:] * self.assimilation
+        
+        if self.Arfrac is not None:
+            total_amount = self.D2 + self.Ar
+            self.Ar = self.Arfrac * total_amount
+            self.D2 = (1-self.Arfrac) * total_amount
+
         self.n_D2 = utils.impurity_density(self.D2, self.Ti, self.plasma_volume)
         self.n_Ar = utils.impurity_density(self.Ar, self.Ti, self.plasma_volume)
         self.j_par_at_Bmin = np.abs(self.eqdsk.get_Jpar_at_Bmin(self.psi_n))
@@ -135,6 +147,8 @@ class TokamakSimulation:
             "SHOT": self.SHOT,
             "assimilation": self.assimilation,
             "t_TQ": self.t_TQ,
+            "Arfrac": self.Arfrac,
+            "B_factor": self.B_factor,
         }
 
         log_file_path = "simulation_settings.log"
