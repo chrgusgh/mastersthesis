@@ -31,16 +31,16 @@ def save_simulation_data_txt(simulation, I_RE, I_Ohm, I_hot, I_tot, t, tau_CQ):
     ...and so on for I_tot.txt, t.txt, and tau_CQ.txt.
     """
     # Format filename prefix with dBB and assimilation values
-    filename_prefix = f"dBB_{simulation.Arfrac}_assim_{simulation.Bt}"
+    filename_prefix = f"B_factor_{simulation.B_factor}_Arfrac_{simulation.Arfrac}"
 
     # Define the target directory based on discharge and filename_prefix
-    target_dir = f"../JETresults/parameter_scans/{simulation.discharge}/{filename_prefix}"
+    target_dir = f"../../../../../mnt/DISK4/christiang/resultat/parameter_scans/{simulation.discharge}/{filename_prefix}"
 
     # Ensure the target directory exists
     os.makedirs(target_dir, exist_ok=True)
 
     # Path to the simulation_settings.log file in the current directory
-    log_file_path = 'simulation_settings.log'
+    log_file_path = f'{target_dir}/simulation_settings.log'
     # New path for the simulation_settings.log file in the target directory
     new_log_file_path = os.path.join(target_dir, 'simulation_settings.log')
 
@@ -93,7 +93,7 @@ def save_simulation_data(simulation):
     Runs the save_parameter_scan_data.sh script, which stores the current simulation data in
     ../JETresults/parameter_scans/{pulse number}
     """
-    subprocess.run(['./save_parameter_scan_data.sh', simulation.discharge, str(simulation.Arfrac), str(simulation.B_factor)], check=True)
+    subprocess.run(['./save_parameter_scan_data.sh', simulation.discharge, str(simulation.B_factor), str(simulation.Arfrac)], check=True)
 
 
 def run_DREAM_simulation(argv, SHOT, Arfrac, mag_eq_fn, B_factor):
@@ -110,19 +110,20 @@ def run_DREAM_simulation(argv, SHOT, Arfrac, mag_eq_fn, B_factor):
     - tau_CQ (float): The calculated current quench duration.
 
     """
-    simulation = TokamakSimulation(SHOT=SHOT, Arfrac=Arfrac, mag_eq_fn=mag_eq_fn, B_factor=B_factor)
+    simulation = TokamakSimulation(SHOT=SHOT, Arfrac=Arfrac, mag_eq_fn=mag_eq_fn, B_factor=B_factor, dBB_cold=0.5e-3, assimilation=0.01, t_TQ=1e-3)
 
     args, settings = get_settings(argv, simulation)
 
     do_TQ, do_CQ = run_disruption_simulation(args, settings, simulation)
 
-    #I_RE_final, tau_CQ, I_RE, I_Ohm, I_hot, I_tot, t = get_data(do_TQ, do_CQ, simulation)
-
-    #save_simulation_data_txt(simulation, I_RE, I_Ohm, I_hot, I_tot, t, tau_CQ)
-
     save_simulation_data(simulation)
     
-    #subprocess.run(['./cleanup.sh'])
+    I_RE_final, tau_CQ, I_RE, I_Ohm, I_hot, I_tot, t = get_data(do_TQ, do_CQ, simulation)
+
+    save_simulation_data_txt(simulation, I_RE, I_Ohm, I_hot, I_tot, t, tau_CQ)
+    
+    subprocess.run(['./cleanup.sh'])
+
 
     return 0
 
@@ -147,8 +148,8 @@ def perform_parameter_scan(argv, SHOT, Arfrac_values, B_values):
     """
     
     # Where to start in the simulation
-    resume_i = 0
-    resume_j = 0
+    resume_i = 10
+    resume_j = 9
 
     # Initialize results matrices
     RE_current_results = np.zeros((len(Arfrac_values), len(B_values)))
@@ -204,8 +205,8 @@ def perform_parameter_scan(argv, SHOT, Arfrac_values, B_values):
 def main(argv):
 
     SHOT = 5
-    Arfrac_values = np.linspace(1, 1, 1)
-    B_values = np.linspace(1, 1, 1)
+    Arfrac_values = np.linspace(0.001, 0.9999, 11)
+    B_values = np.linspace(0.001, 0.9999, 11)
     
     # Perform the parameter scan
     perform_parameter_scan(argv, SHOT, Arfrac_values, B_values)

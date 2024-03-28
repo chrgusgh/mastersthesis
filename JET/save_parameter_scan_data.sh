@@ -2,8 +2,8 @@
 
 # Read command-line arguments
 shot_number=$1
-Arfrac=$2
-B_factor=$3
+B_factor=$2
+Arfrac=$3
 
 # Correctly create folder name using B_factor and Arfrac
 folder_name="B_factor_${B_factor}_Arfrac_${Arfrac}"

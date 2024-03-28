@@ -149,6 +149,9 @@ class TokamakSimulation:
             "t_TQ": self.t_TQ,
             "Arfrac": self.Arfrac,
             "B_factor": self.B_factor,
+            "dt0": self.dt0,
+            "dtmax": self.dtmax,
+            "mag_eq_fn": self.mag_eq_fn,
         }
 
         log_file_path = "simulation_settings.log"
