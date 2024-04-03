@@ -2,11 +2,11 @@
 
 # Read command-line arguments
 shot_number=$1
-B_factor=$2
-Arfrac=$3
+dBB=$2
+assim=$3
 
 # Correctly create folder name using B_factor and Arfrac
-folder_name="B_factor_${B_factor}_Arfrac_${Arfrac}"
+folder_name="dBB_${dBB}_assim_${assim}"
 
 # Create new folder
 mkdir "$folder_name"

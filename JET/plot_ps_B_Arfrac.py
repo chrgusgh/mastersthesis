@@ -82,8 +82,8 @@ def plot_contour(B_factor_values, Arfrac_values, I_RE_matrix):
     """
     A, D = np.meshgrid(Arfrac_values, B_factor_values)
     plt.figure(figsize=(10, 7))
-    levels = np.linspace(I_RE_matrix.min(), I_RE_matrix.max(), 100)  # Adjust 50 to increase/decrease the number of levels
-    contour = plt.contourf(A, D, I_RE_matrix, levels=levels, cmap='plasma')
+    levels = np.linspace(I_RE_matrix.min(), I_RE_matrix.max(), 50)  # Adjust 50 to increase/decrease the number of levels
+    contour = plt.contourf(A, D, I_RE_matrix, cmap='plasma')
     plt.colorbar(contour, label='$I_{re, max}$ (A)')
     #plt.xscale('log')
     #plt.yscale('log')
@@ -94,7 +94,7 @@ def plot_contour(B_factor_values, Arfrac_values, I_RE_matrix):
 
 def main():
     discharge = '85943'
-    base_dir = f'../../../../../mnt/DISK4/christiang/resultat/parameter_scans/{discharge}'
+    base_dir = f'../../../../../mnt/DISK4/christiang/resultat/parameter_scans/B_factor_Arfrac_scans/{discharge}_the_one'
     pattern = re.compile(r"B_factor_([0-9.]+)_Arfrac_([0-9.]+)")
     
     B_factors, Arfracs = [], []

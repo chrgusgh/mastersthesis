@@ -7,7 +7,7 @@ import utils as utils
 from EQDSK import EQDSK
 
 class TokamakSimulation:
-    def __init__(self, SHOT=1, dBB_cold=2e-3, assimilation=0.2, t_TQ=1e-4, Arfrac=None, mag_eq_fn=None, B_factor=None):
+    def __init__(self, SHOT=1, dBB_cold=2e-3, assimilation=0.2, t_TQ=1e-4, Arfrac=None, mag_eq_fn=None, B_factor=None, Ip_factor=1):
         """
         Initializes the TokamakSimulation class with specific simulation parameters.
 
@@ -25,6 +25,7 @@ class TokamakSimulation:
         self.mag_eq_fn = mag_eq_fn
         self.Arfrac = Arfrac
         self.B_factor = B_factor
+        self.Ip_factor = Ip_factor
 
         # Load shot data and equilibrium configuration
         self.fp = '../JETdata/DDB_Runaways_ArBt_scan.h5'
@@ -63,7 +64,7 @@ class TokamakSimulation:
         self.plasma_volume = 76.55510067624934  # m^3
         self.Ti = 300  # Assumption for impurities, in Kelvin
         self.process_profiles()
-        self.Ip0 = np.abs(self.p0['Ip_A'][:])
+        self.Ip0 = np.abs(self.p0['Ip_A'][:]) * self.Ip_factor
         self.q = 1
         self.m_e_eV = const.m_e / const.e
         self.T_i = np.median(self.T0[0])
@@ -92,9 +93,10 @@ class TokamakSimulation:
         self.Ar = self.p0['Ar_Pam3'][:] * self.assimilation
         
         if self.Arfrac is not None:
+            #self.Ar = self.Ar * self.Arfrac
             total_amount = self.D2 + self.Ar
             self.Ar = self.Arfrac * total_amount
-            self.D2 = (1-self.Arfrac) * total_amount
+            self.D2 = 0.2 * total_amount
 
         self.n_D2 = utils.impurity_density(self.D2, self.Ti, self.plasma_volume)
         self.n_Ar = utils.impurity_density(self.Ar, self.Ti, self.plasma_volume)
@@ -149,6 +151,7 @@ class TokamakSimulation:
             "t_TQ": self.t_TQ,
             "Arfrac": self.Arfrac,
             "B_factor": self.B_factor,
+            "Ip_factor": self.Ip_factor,
             "dt0": self.dt0,
             "dtmax": self.dtmax,
             "mag_eq_fn": self.mag_eq_fn,
