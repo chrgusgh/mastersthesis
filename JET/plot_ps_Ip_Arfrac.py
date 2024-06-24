@@ -65,15 +65,17 @@ def create_meshgrid_for_contour_plot(Ip_factors, Arfracs, base_dir, pattern):
             counter = counter + 1
             Ip_factor = float(Ip_factor)
             Arfrac = float(Arfrac)
-            #print(Ip_factor)
-            #print(Arfrac)
-            #print(counter)
+            print(Ip_factor)
+            print(Arfrac)
+            print(counter)
             i = np.where(Ip_factor_values == Ip_factor)[0][0]
             j = np.where(Arfrac_values == Arfrac)[0][0]
             #print('i:',i)
             #print('j:', j)
             file_path = os.path.join(base_dir, folder, "I_RE.txt")
             I_RE_data = read_data_from_file(file_path)
+            #print(Ip_factor)
+            #print(Arfrac)
             I_RE_matrix[i, j] = np.max(I_RE_data)
             
     return Ip_factor_values, Arfrac_values, I_RE_matrix
@@ -87,19 +89,38 @@ def plot_contour(Ip_factor_values, Arfrac_values, I_RE_matrix):
     - Arfrac_values (np.ndarray): Array of Arfrac values.
     - I_RE_matrix (np.ndarray): 2D array containing I_RE values corresponding to each Ip_factor and Arfrac combination.
     """
-    A, D = np.meshgrid(Arfrac_values, Ip_factor_values)
+    Ip0 = 1953280.125
+    Z = I_RE_matrix
+    #filtered_indices = np.where(Ip_factor_values >= 0.2)[0]
+    #filtered_Ip_factor_values = Ip_factor_values[filtered_indices]
+    #filtered_Z = Z[filtered_indices, :]
+    #A, D = np.meshgrid(Arfrac_values, filtered_Ip_factor_values)
+    A, D = np.meshgrid(np.sort(Arfrac_values), np.sort(Ip_factor_values))
     plt.figure(figsize=(10, 7))
-    levels = np.linspace(I_RE_matrix.min(), I_RE_matrix.max(), 50)  # Adjust 50 to increase/decrease the number of levels
-    contour = plt.contourf(A, D, I_RE_matrix, cmap='plasma')
-    plt.colorbar(contour, label='$I_{re, max}$ (A)')
-    plt.title('Maximum Runaway Electron Current ($I_{re, max}$)')
-    plt.xlabel('Arfrac')
-    plt.ylabel('Ip_factor')
+    plt.rcParams.update({'font.size': 20})
+    #plt.xlim(0, 1)
+    #plt.ylim(0.2, 1)
+    #levels = np.arange(0, 0.80 + 0.1, 0.1)
+    contour = plt.contourf(A, D, Z*1e-6, levels=28, cmap='plasma')#, extend='max')
+    cbar = plt.colorbar(contour)
+    cbar.set_label(label='$I_{\mathrm{RE, max}}$ [MA]')
+    for collection in contour.collections:
+        collection.set_rasterized(True)
+
+    #cbar.set_ticks(levels)
+    #cbar.formatter.set_powerlimits((0,0))
+    #cbar.update_ticks()
+    plt.xlim(0, 1)
+    plt.ylim(0.2, 1)
+    plt.xlabel('Ar fraction')
+    plt.ylabel('$C_{I_{\mathrm{p}}}$')
     plt.show()
 
 def main():
     discharge = '85943'
-    base_dir = f'../../../../../mnt/DISK4/christiang/resultat/parameter_scans/Ip_Arfrac_scans/{discharge}_the_one'
+    #base_dir = f'../../../../../mnt/DISK4/christiang/resultat/parameter_scans/Ip_Arfrac_scans/{discharge}_the_one'
+    #base_dir = f'../../../../../mnt/DISK4/christiang/resultat/parameter_scans/Ip_Arfrac_scans/{discharge}_cD_4_full'
+    base_dir = f'../../../../../mnt/DISK4/christiang/resultat/parameter_scans/Ip_Arfrac_scans/{discharge}_the_true_cD_3.5'
     pattern = re.compile(r"Ip_factor_([0-9.]+)_Arfrac_([0-9.]+)")
     
     Ip_factors, Arfracs = [], []

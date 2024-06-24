@@ -109,8 +109,8 @@ def perform_parameter_scan(argv, SHOT, Ip_values, Arfrac_values, t_TQ):
     """
 
     # Where to start in the simulation
-    resume_i = 1
-    resume_j = 5 
+    resume_i = 6
+    resume_j = 3
 
     # Initialize results matrices
     RE_current_results = np.zeros((len(Ip_values), len(Arfrac_values)))
@@ -145,9 +145,9 @@ def perform_parameter_scan(argv, SHOT, Ip_values, Arfrac_values, t_TQ):
 def main(argv):
     SHOT = 5
     Ip_range = (0.0001, 0.9999)
-    Arfrac_range = (0.0001, 0.9999)
-    Ip_values = np.linspace(Ip_range[0], Ip_range[1], 3)
-    Arfrac_values = np.linspace(Arfrac_range[0], Arfrac_range[1], 20)
+    Arfrac_range = (0.05, 0.95)
+    Ip_values = np.linspace(Ip_range[0], Ip_range[1], 11)
+    Arfrac_values = np.linspace(Arfrac_range[0], Arfrac_range[1], 10)
     t_TQ = 1e-4
 
     Ip_values, Arfrac_values, RE_current_results, tau_CQ_results = perform_parameter_scan(argv, SHOT, Ip_values, Arfrac_values, t_TQ)

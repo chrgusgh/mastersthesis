@@ -57,7 +57,7 @@ def create_meshgrid_for_contour_plot(dBBs, assimilations, base_dir, pattern):
     dBB_values = np.unique(np.array(dBBs).astype(float))
     assimilation_values = np.unique(np.array(assimilations).astype(float))
     I_RE_matrix = np.zeros((len(dBB_values), len(assimilation_values)))
-    
+    count = 0
     for folder in os.listdir(base_dir):
         dBB, assimilation = get_dBB_and_assimilation_from_folder_name(folder, pattern)
         if dBB is not None and assimilation is not None:
@@ -67,6 +67,10 @@ def create_meshgrid_for_contour_plot(dBBs, assimilations, base_dir, pattern):
             j = np.where(assimilation_values == assimilation)[0][0]
             file_path = os.path.join(base_dir, folder, "I_RE.txt")
             I_RE_data = read_data_from_file(file_path)
+            print(count)
+            count = count + 1
+            print(dBB)
+            print(assimilation)
             I_RE_matrix[i, j] = np.max(I_RE_data)
             
     return dBB_values, assimilation_values, I_RE_matrix
@@ -83,19 +87,25 @@ def plot_contour(dBB_values, assimilation_values, I_RE_matrix):
     A, D = np.meshgrid(assimilation_values, dBB_values)
     #print(A)
     #print(D)
-    plt.figure(figsize=(10, 7))
-    contour = plt.contourf(A, D, I_RE_matrix, cmap='plasma')
-    plt.colorbar(contour, label='$I_{RE}$ (A)')
+    plt.figure(figsize=(7, 6))
+    plt.rcParams.update({'font.size': 14})
+    contour = plt.contourf(A, D, I_RE_matrix*1e-6, cmap='plasma', levels=25)
+    plt.colorbar(contour, label='$I_{\mathrm{RE,\, max}}$ [MA]')
+    
+    for collection in contour.collections:
+        collection.set_rasterized(True)
+
     plt.xscale('log')
     plt.yscale('log')
-    plt.title('Runaway Electron Current ($I_{RE}$)')
-    plt.xlabel('Assimilation')
+    #plt.title('Runaway Electron Current ($I_{RE}$)')
+    plt.xlabel('Assimilation fraction')
     plt.ylabel('$\delta B / B$')
     plt.show()
 
 def main():
-    discharge = '85445'
-    base_dir = f'../JETresults/parameter_scans/{discharge}'
+    discharge = '85943'
+    #base_dir = f'../../../../../mnt/DISK4/christiang/resultat/parameter_scans/dBB_assim_scans/{discharge}_the_true_tTQ_1.5e-4s'
+    base_dir = f'../../../../../mnt/DISK4/christiang/resultat/parameter_scans/dBB_assim_scans/{discharge}_the_one_t_TQ_0.75e-4s_full'
     pattern = re.compile(r"dBB_([0-9.]+)_assim_([0-9.]+)")
     
     dBBs, assimilations = [], []

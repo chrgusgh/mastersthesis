@@ -67,6 +67,18 @@ def create_meshgrid_for_contour_plot(B_factors, Arfracs, base_dir, pattern):
             j = np.where(Arfrac_values == Arfrac)[0][0]
             file_path = os.path.join(base_dir, folder, "I_RE.txt")
             I_RE_data = read_data_from_file(file_path)
+            #if B_factor < 1.1:
+                #if Arfrac > 0.15:
+                    #if B_factor > 0.9:
+                        #I_RE_matrix[i, j] = np.max(I_RE_data) + B_factor*1.6e4
+                    #else:
+                        #print('reached!')
+                        #print(np.max(I_RE_data) - 1e5)
+                        #I_RE_matrix[i, j] = np.max(I_RE_data) +B_factor*1.4e4
+                        #I_RE_matrix[i, j] = np.max(I_RE_data) + (1.2*B_factor) * 1.5e4
+                #else:
+                    #I_RE_matrix[i, j] = np.max(I_RE_data)
+            #else:
             I_RE_matrix[i, j] = np.max(I_RE_data)
             
     return B_factor_values, Arfrac_values, I_RE_matrix
@@ -80,21 +92,28 @@ def plot_contour(B_factor_values, Arfrac_values, I_RE_matrix):
     - Arfrac_values (np.ndarray): Array of Arfrac values.
     - I_RE_matrix (np.ndarray): 2D array containing I_RE values corresponding to each B_factor and Arfrac combination.
     """
-    A, D = np.meshgrid(Arfrac_values, B_factor_values)
+    A, D = np.meshgrid(np.sort(Arfrac_values), np.sort(B_factor_values))
     plt.figure(figsize=(10, 7))
-    levels = np.linspace(I_RE_matrix.min(), I_RE_matrix.max(), 50)  # Adjust 50 to increase/decrease the number of levels
-    contour = plt.contourf(A, D, I_RE_matrix, cmap='plasma')
-    plt.colorbar(contour, label='$I_{re, max}$ (A)')
+    plt.rcParams.update({'font.size': 20})
+    #levels = np.linspace(I_RE_matrix.min(), I_RE_matrix.max(), 50)  # Adjust 50 to increase/decrease the number of levels
+    contour = plt.contourf(A, D, I_RE_matrix*1e-6, cmap='plasma', levels=28)
+    #contour = plt.contourf(A, D, I_RE_matrix*1e-6, cmap='plasma', levels= 100)
+    plt.colorbar(contour, label='$I_{\mathrm{RE,\, max}}$ [MA]')
+    for collection in contour.collections:
+        collection.set_rasterized(True)
     #plt.xscale('log')
     #plt.yscale('log')
-    plt.title('Maximum Runaway Electron Current ($I_{re, max}$)')
-    plt.xlabel('Arfrac')
-    plt.ylabel('B_factor')
+    #plt.title('Maximum Runaway Electron Current ($I_{re, max}$)')
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    plt.xlabel('Ar fraction')
+    plt.ylabel('$C_B$')
     plt.show()
 
 def main():
     discharge = '85943'
-    base_dir = f'../../../../../mnt/DISK4/christiang/resultat/parameter_scans/B_factor_Arfrac_scans/{discharge}_the_one'
+    base_dir = '../../../../../mnt/DISK4/christiang/resultat/parameter_scans/B_factor_Arfrac_scans/85943_the_true_cD_3.5'
+    #base_dir = '../../../../../mnt/DISK4/christiang/resultat/parameter_scans/B_factor_Arfrac_scans/85943_the_one'
     pattern = re.compile(r"B_factor_([0-9.]+)_Arfrac_([0-9.]+)")
     
     B_factors, Arfracs = [], []

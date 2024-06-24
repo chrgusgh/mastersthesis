@@ -109,8 +109,9 @@ def perform_parameter_scan(argv, SHOT, dBB_values, assim_values, t_TQ):
     """
 
     # Where to start in the simulation
-    resume_i = 2
-    resume_j = 7 #i=1,j=8 hoppade jag över.
+    resume_i = 3
+    resume_j = 7
+
 
     # Initialize results matrices
     RE_current_results = np.zeros((len(dBB_values), len(assim_values)))
@@ -144,11 +145,14 @@ def perform_parameter_scan(argv, SHOT, dBB_values, assim_values, t_TQ):
 
 def main(argv):
     SHOT = 5
-    dBB_range = (1e-4, 1e-2)
-    assim_range = (-2, 0)
-    dBB_values = np.linspace(dBB_range[0], dBB_range[1], 11)
-    assim_values = np.logspace(assim_range[0], assim_range[1], 11)
-    t_TQ = 1e-4
+    #dBB_range = (-4, -2)
+    assim_range = (0.01, 1)
+    #dBB_values = np.logspace(dBB_range[0], dBB_range[1], 11)
+    #dBB_values = np.array([1e-4, 2.5e-4, 5e-4, 7.5e-4, 1e-3, 2.5e-3, 5e-3, 7.5e-3, 1e-2])
+    #dBB_values = np.array([1e-4, 5e-4, 1e-3, 5e-3, 1e-2])
+    dBB_values = np.array([2.5e-4, 7.5e-4, 2.5e-3, 7.5e-3])
+    assim_values = np.linspace(assim_range[0], assim_range[1], 11)
+    t_TQ = 1.5e-4
 
     dBB_values, assim_values, RE_current_results, tau_CQ_results = perform_parameter_scan(argv, SHOT, dBB_values, assim_values, t_TQ)
 

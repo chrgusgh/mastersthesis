@@ -70,8 +70,8 @@ class TokamakSimulation:
         self.T_i = np.median(self.T0[0])
         self.T_f = 100  # Final temperature in eV
         # TODO: streamline this to accomodate for fluid 1e-9 and isotropic 1e-11.
-        self.dt0 = 1e-12
-        self.dtmax =1e-4
+        self.dt0 = 1e-9
+        self.dtmax = 1e-4
 
     def process_profiles(self):
         """Processes radial profiles for electron density and temperature."""
@@ -96,7 +96,7 @@ class TokamakSimulation:
             #self.Ar = self.Ar * self.Arfrac
             total_amount = self.D2 + self.Ar
             self.Ar = self.Arfrac * total_amount
-            self.D2 = 0.2 * total_amount
+            self.D2 = (1-self.Arfrac) * total_amount
 
         self.n_D2 = utils.impurity_density(self.D2, self.Ti, self.plasma_volume)
         self.n_Ar = utils.impurity_density(self.Ar, self.Ti, self.plasma_volume)

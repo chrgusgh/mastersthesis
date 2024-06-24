@@ -4,7 +4,7 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
-from scipy.interpolate import UnivariateSpline
+from scipy.interpolate import UnivariateSpline, interp1d
 from scipy.constants import c, e
 from scipy.constants import k as k_B
 import sys
@@ -12,7 +12,7 @@ import sys
 #sys.path.append('/mnt/HDD/software/DREAM')
 #sys.path.append('/mnt/HDD/software/DREAM/build/dreampyface/cxx')
 sys.path.append('../../DREAM/py/')
-from DREAM import DREAMSettings, runiface
+from DREAM import DREAMSettings, runiface, DREAMOutput
 #import dreampyface
 
 import DREAM.Settings.AdvectionInterpolation as AI
@@ -439,6 +439,26 @@ def simulate(ds1, mode, impurities, t_sim, dt0, dtmax, simulation=None, nre0=Non
     for i in impurities:
         #print('i[n]:', i['n'])
         ds1.eqsys.n_i.addIon(i['name'], Z=i['Z'], iontype=Ions.IONS_DYNAMIC_NEUTRAL, n=i['n'], T=Ti0)
+    
+    #ds1.eqsys.n_i.addIon('D2', Z=1, iontype=Ions.IONS_DYNAMIC_NEUTRAL, n=simulation.n_D2, T=Ti0)
+    
+    #do_integrate = DREAMOutput('output.h5')
+    #r_Ar = np.append(np.append(0, do_integrate.grid.r), simulation.T0r[-1])
+    #cD = 3.5
+    #profile = (1 + np.tanh(cD * ((do_integrate.grid.r / simulation.a) - .5)))
+    #n_Ar_mod = simulation.n_Ar * profile * do_integrate.grid.integrate(1) / do_integrate.grid.integrate(profile)
+
+    #plt.plot(do_integrate.grid.r, n_Ar_mod, label='before')
+    #n_Ar_mod = np.append(np.append(n_Ar_mod[0], n_Ar_mod), n_Ar_mod[-1])
+
+    #plt.plot(r_Ar, n_Ar_mod, label='after')
+    
+    #f = interp1d(r_Ar, n_Ar_mod, kind='linear')
+    #plt.plot(simulation.T0r, f(simulation.T0r), label='T0r')
+    #plt.legend()
+    #plt.show()
+
+    #ds1.eqsys.n_i.addIon('Ar', Z=18, iontype=Ions.IONS_DYNAMIC_NEUTRAL, n=f(simulation.T0r), r=simulation.T0r, T=Ti0)
 
    # dBB_vec = np.linspace(dBB0, 4e-4, 1000)
     t = np.array([0, simulation.t_TQ, simulation.t_TQ + 1e-9, 1])

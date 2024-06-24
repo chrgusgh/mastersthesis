@@ -94,7 +94,7 @@ def run_DREAM_simulation(argv, SHOT, Arfrac, mag_eq_fn, B_factor):
     - tau_CQ (float): The calculated current quench duration.
 
     """
-    simulation = TokamakSimulation(SHOT=SHOT, Arfrac=Arfrac, mag_eq_fn=mag_eq_fn, B_factor=B_factor, dBB_cold=0.5e-3, assimilation=0.01, t_TQ=1e-3)
+    simulation = TokamakSimulation(SHOT=SHOT, Arfrac=Arfrac, mag_eq_fn=mag_eq_fn, B_factor=B_factor, dBB_cold=2e-3, assimilation=0.1, t_TQ=1e-4)
 
     args, settings = get_settings(argv, simulation)
 
@@ -131,7 +131,7 @@ def perform_parameter_scan(argv, SHOT, Arfrac_values, B_values):
     """
     
     # Where to start in the simulation
-    resume_i = 6
+    resume_i = 9
     resume_j = 7
 
     # Initialize results matrices
@@ -188,7 +188,7 @@ def perform_parameter_scan(argv, SHOT, Arfrac_values, B_values):
 def main(argv):
 
     SHOT = 5
-    Arfrac_values = np.linspace(0.001, 0.9999, 11)
+    Arfrac_values = np.linspace(0.001, 0.9999, 21)
     B_values = np.linspace(0.001, 0.9999, 11)
     
     # Perform the parameter scan
