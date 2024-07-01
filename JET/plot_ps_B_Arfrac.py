@@ -67,18 +67,6 @@ def create_meshgrid_for_contour_plot(B_factors, Arfracs, base_dir, pattern):
             j = np.where(Arfrac_values == Arfrac)[0][0]
             file_path = os.path.join(base_dir, folder, "I_RE.txt")
             I_RE_data = read_data_from_file(file_path)
-            #if B_factor < 1.1:
-                #if Arfrac > 0.15:
-                    #if B_factor > 0.9:
-                        #I_RE_matrix[i, j] = np.max(I_RE_data) + B_factor*1.6e4
-                    #else:
-                        #print('reached!')
-                        #print(np.max(I_RE_data) - 1e5)
-                        #I_RE_matrix[i, j] = np.max(I_RE_data) +B_factor*1.4e4
-                        #I_RE_matrix[i, j] = np.max(I_RE_data) + (1.2*B_factor) * 1.5e4
-                #else:
-                    #I_RE_matrix[i, j] = np.max(I_RE_data)
-            #else:
             I_RE_matrix[i, j] = np.max(I_RE_data)
             
     return B_factor_values, Arfrac_values, I_RE_matrix
