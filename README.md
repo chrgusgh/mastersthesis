@@ -1,6 +1,8 @@
-# Mastersthesis in fusion energy
+# Masters thesis in fusion energy
 
 Thesis title: Sensitivities of the runaway current in JET disruptions to massive gas injection and initial plasma current
+
+The project concerned simulation and data analysis of a tokamak plasma subjected to the injection of a noble gas, argon, and deuterium. Data was provided from the JET tokamak in the UK. The used simulation framework was DREAM - originally developed by the Plasma Theory Group at the department of physics at Chalmers University of Technology - which is built on a C++ base but uses a pythonic interface to execute simulations. More info about DREAM can be found on this link: https://ft.nephy.chalmers.se/dream/
 
 Abstract:
 The Joint European Torus (JET) tokamak, located at the Culham Centre for Fusion Energy in the UK, has been a leader in magnetic confinement fusion (MCF) research for decades. As the world’s largest operational tokamak until 2023, JET has sig- nificantly advanced the understanding and technology needed for controlled fusion energy, which aims to provide a clean, large-scale energy source by replicating the processes that power the Sun. A primary challenge in tokamak operation is man- aging plasma disruptions, which can terminate plasma confinement and generate runaway electrons (REs). These high-energy electrons can damage reactor compo- nents, thus studying REs is vital for the viability of fusion energy. As the fusion community progresses towards advanced reactors like ITER in France and SPARC in the USA, understanding and controlling REs becomes even more important.
